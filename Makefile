@@ -26,7 +26,7 @@ else
 endif
 
 LDFLAGS = -lm
-CFLAGS = -Wall -O3
+CFLAGS = -Wall -O3 -Iboard_utils
 
 # Delete default list of suffixes for recipes
 .SUFFIXES:
@@ -58,6 +58,10 @@ build :
 	@echo -e "${BLUE} - Making Build Directory in ${PWD}/build${RESET}"
 	@rm -rf build
 	@mkdir build
+
+
+flash: blink.hex
+	python3 ../board_utils/util/caravel_hkflash.py blink.hex
 
 %.o :
 	@echo -e "${CYAN} - Building object: $@${RESET}"
