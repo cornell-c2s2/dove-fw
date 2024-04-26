@@ -12,12 +12,12 @@ make test_arith
 
 # Alternatively
 
-make all
+make check
 ```
 
 You can then run the tests (build in a `build` directory) as normal executables
 
 ```bash
-build/test_bitops
-build/test_arith
+./test_bitops
+./test_arith
 ```
