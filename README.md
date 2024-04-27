@@ -27,9 +27,9 @@ make test_arith
 make check
 ```
 
-You can then run the tests (build in a `build` directory) as normal executables
+You can then run the tests (build in the `build` directory) as spike executables
 
 ```bash
 spike pk ./test_bitops
-spiek pk ./test_arith
+spike pk ./test_arith
 ```
