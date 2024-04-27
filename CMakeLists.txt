@@ -10,9 +10,14 @@ set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(FILTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/filter")
 set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/riscv-app")
 
-option(RISCV_BOARD "Use riscv board" OFF)
+option(RISCV_BOARD OFF)
 
 add_compile_definitions(PROJ_ROOT=\"${PROJECT_SOURCE_DIR}\")
+
+if(RISCV_BOARD) 
+add_compile_definitions(RISCV_BOARD="1")
+endif()
+
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=c11")
 
@@ -64,25 +69,7 @@ set(TEST_FILES
    test_arith.c
    test_bitops.c
  )
-add_custom_target(check)
-foreach(TEST_FILE ${TEST_FILES})
 
-  remove_extension(TEST_BIN ${TEST_FILE})
-  set(TEST_SRC "${TESTS_DIR}/${TEST_FILE}")
-
-  add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_SRC})
-  target_link_libraries(${TEST_BIN} m UTIL_LIBRARY) 
-  add_dependencies(check ${TEST_BIN})
-
-endforeach(TEST_FILE)
-
-add_custom_command(TARGET check POST_BUILD
-                   COMMAND echo ""
-                   COMMAND echo "${Green}########################################${Reset}"
-                   COMMAND echo "${Green}## All tests built in build directory${Reset}"
-                   COMMAND echo "${Green}########################################${Reset}"
-                   COMMAND echo ""
-                  )
 
 add_custom_target(run)
 if(RISCV_BOARD) 
@@ -96,18 +83,38 @@ add_custom_command(
 else() 
 add_custom_command(
     TARGET run POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "SPIKE"
-)  
+    COMMAND ${CMAKE_COMMAND} -E echo "SPIKE APP"
+)
+
+
+add_custom_target(check)
+foreach(TEST_FILE ${TEST_FILES})
+
+  remove_extension(TEST_BIN ${TEST_FILE})
+  set(TEST_SRC "${TESTS_DIR}/${TEST_FILE}")
+
+  add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_SRC})
+  target_link_libraries(${TEST_BIN} m UTIL_LIBRARY) 
+  add_dependencies(check ${TEST_BIN})
+
+endforeach(TEST_FILE)
+add_custom_command(TARGET check POST_BUILD
+    COMMAND echo ""
+    COMMAND echo "${Green}########################################${Reset}"
+    COMMAND echo "${Green}## All tests built in build directory${Reset}"
+    COMMAND echo "${Green}########################################${Reset}"
+    COMMAND echo ""
+)
 endif()
 
 add_custom_target(BUILD_SUCCESSFUL ALL
-                   DEPENDS ${ALL_TARGETS}
-                   COMMAND ${CMAKE_COMMAND} -E echo ""
-                   COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}########################################${Reset}"
-                   COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}## C2S2 Build System${Reset}"
-                   COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}########################################${Reset}"
-                   COMMAND ${CMAKE_COMMAND} -E echo ""
-                  )
+    DEPENDS ${ALL_TARGETS}
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}########################################${Reset}"
+    COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}## C2S2 Build System${Reset}"
+    COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}########################################${Reset}"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+)
 
                   
 
