@@ -5,6 +5,23 @@ project(DOVE_FW VERSION 1.0)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+set(UTILS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/utils")
+set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+set(FILTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/filter")
+set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/riscv-app")
+
+add_compile_definitions(PROJ_ROOT=\"${PROJECT_SOURCE_DIR}\")
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=c11")
+
+message("CMake detected system processor: ${CMAKE_SYSTEM_PROCESSOR}")
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL riscv64)
+  message("Cross-compiling with RISCV-GNU GCC Toolchain!")
+  message("Cmake flags for riscv64: ${CMAKE_C_FLAGS}")
+endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(NOT WIN32)
   string(ASCII 27 Esc)
   set(Reset 		"${Esc}[m")
@@ -30,8 +47,6 @@ function(remove_extension VARNAME FILE_NAME)
   set(${VARNAME} "${NAME_WITHOUT_EXT}" PARENT_SCOPE)
 endfunction()
 
-set(UTILS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/utils")
-set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 include_directories(${UTILS_DIR})
 
 set(UTIL_FILES
@@ -66,6 +81,16 @@ add_custom_command(TARGET check POST_BUILD
                    COMMAND echo "${Green}########################################${Reset}"
                    COMMAND echo ""
                   )
+
+
+add_custom_target(flash)
+add_custom_command(
+    TARGET flash POST_BUILD
+    COMMAND riscv64-unknown-elf-gcc -I../../ -I../../generated/ -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,../../sections.lds,--strip-debug -ffreestanding -nostdlib -o ../blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink.c 
+    COMMAND riscv64-unknown-elf-objcopy -O verilog ${RISCVAPP_DIR}/blink.elf ${RISCVAPP_DIR}/blink.hex
+    COMMAND sed -i='' 's/@1000/@0000/g' ${RISCVAPP_DIR}/blink.hex  
+    COMMAND ${RISCVAPP_DIR}/caravel_hkflash.py ${RISCVAPP_DIR}/blink.hex
+)  
 
 add_custom_target(BUILD_SUCCESSFUL ALL
                    DEPENDS ${ALL_TARGETS}
