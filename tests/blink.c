@@ -258,7 +258,7 @@ int main()
     // Use matched filter
     matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
-    int filtered_size = fake_size + kernel_size - 1;
+    char filtered_size = fake_size + kernel_size - 1;
 
     for (int i = 0; i < filtered_size; i++)
     {
