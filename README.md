@@ -21,9 +21,7 @@ make run
 # Only works on spike
 make test_bitops
 make test_arith
-
-# Alternatively
-
+# Or for both tests
 make check
 ```
 
