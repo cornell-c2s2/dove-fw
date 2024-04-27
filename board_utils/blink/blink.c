@@ -1,6 +1,7 @@
 #include "../defs.h"
 #include "src.h"
-#include "../fake.h"
+#include "../../include/fake.h"
+#include "../../include/arith.h"
 // #include "../local_defs.h"
 // #include "../stub.c"
 
@@ -116,20 +117,20 @@ void delay(const int d)
     }
 }
 
-void putchar(char c)
-{
-    if (c == '\n')
-        putchar('\r');
-    while (reg_uart_txfull == 1)
-        ;
-    reg_uart_data = c;
-}
+// void putchar(char c)
+// {
+//     if (c == '\n')
+//         putchar('\r');
+//     while (reg_uart_txfull == 1)
+//         ;
+//     reg_uart_data = c;
+// }
 
-void print(const char *p)
-{
-    while (*p)
-        putchar(*(p++));
-}
+// void print(const char *p)
+// {
+//     while (*p)
+//         putchar(*(p++));
+// }
 
 void blink()
 {
@@ -146,6 +147,67 @@ void blink()
     delay(8000000);
 }
 
+int get_bit( int src, int n ) {
+    return ( src >> n ) & 0x1;
+}
+
+//------------------------------------------------------------------------
+// Writing
+//------------------------------------------------------------------------
+
+int set_bit( int src, int n ) {
+    return src | ( 0x1 << n );
+}
+
+int reset_bit( int src, int n ) {
+    return src & ~( 0x1 << n );
+}
+int mul( int src1, int src2 ) {
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Invert operands to make positive, if necessary
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    if( ( src1 < 0 ) & ( src2 < 0 ) ) {
+        src1 = -src1;
+        src2 = -src2;
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Iterate over smaller positive operand (opb) for efficiency
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    int opa;
+    int opb;
+
+    if( src1 < 0 ) {
+        opa = src1;
+        opb = src2;
+    } else if( src2 < 0 ) {
+        opa = src2;
+        opb = src1;
+    } else if( src1 < src2 ) {
+        opa = src2;
+        opb = src1;
+    } else {
+        opa = src1;
+        opb = src2;
+    }
+
+    int acc = 0;
+
+    while( opb > 0 ){
+        if( get_bit( opb, 0 ) ) {
+            acc += opa;
+        }
+
+        opa = ( opa << 1 );
+        opb = ( opb >> 1 );
+    }
+
+    return acc;
+}
+
 void matched_filter(int *input_signal, int signal_length, int *filter_kernel, int kernel_length, int *filtered_signal)
 {
     // Allocate memory for the filtered signal
@@ -160,11 +222,12 @@ void matched_filter(int *input_signal, int signal_length, int *filter_kernel, in
         {
             if (i >= j && i - j < signal_length)
             {
-                filtered_signal[i] += input_signal[i - j] * filter_kernel[kernel_length - 1 - j];
+                filtered_signal[i] += mul(input_signal[i - j], filter_kernel[kernel_length - 1 - j]);
             }
         }
     }
 }
+
 
 // // ONLY WORKS FOR UNSIGNED INTS
 // int __mulsi3(int a, int b)
@@ -251,9 +314,9 @@ void main()
     //    reg_mprj_io_0  = GPIO_MODE_MGMT_STD_ANALOG;
 
     //    gpio_program();
-    //    gpio_program_local();
-
-    //    reg_uart_enable = 1;
+    //    gpio_prreg_gpio_out = 0; // ON
+    reg_mprj_datah = 0x0000003f;
+    reg_mprj_datal = 0xffffffff;
 
     //    print("Hello World !!");
     //    putchar('x');
@@ -283,10 +346,15 @@ void main()
     for (int i = 0; i < filtered_size; i++)
     {
 
-        if (filtered[i] > 4)
+        if (filtered[i] > 0)
         {
             blink();
         }
-        delay(8000000);
+        delay(5000000);
     }
+    reg_gpio_out = 0; // ON
+    reg_mprj_datah = 0x0000003f;
+    reg_mprj_datal = 0xffffffff;
+
+
 }
