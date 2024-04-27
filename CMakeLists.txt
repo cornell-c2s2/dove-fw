@@ -10,6 +10,8 @@ set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(FILTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/filter")
 set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/riscv-app")
 
+option(RISCV_BOARD "Use riscv board" OFF)
+
 add_compile_definitions(PROJ_ROOT=\"${PROJECT_SOURCE_DIR}\")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=c11")
@@ -82,15 +84,21 @@ add_custom_command(TARGET check POST_BUILD
                    COMMAND echo ""
                   )
 
-
-add_custom_target(flash)
+add_custom_target(run)
+if(RISCV_BOARD) 
 add_custom_command(
-    TARGET flash POST_BUILD
-    COMMAND riscv64-unknown-elf-gcc -I../../ -I../../generated/ -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,../../sections.lds,--strip-debug -ffreestanding -nostdlib -o ../blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink.c 
-    COMMAND riscv64-unknown-elf-objcopy -O verilog ${RISCVAPP_DIR}/blink.elf ${RISCVAPP_DIR}/blink.hex
-    COMMAND sed -i='' 's/@1000/@0000/g' ${RISCVAPP_DIR}/blink.hex  
-    COMMAND ${RISCVAPP_DIR}/caravel_hkflash.py ${RISCVAPP_DIR}/blink.hex
+    TARGET run POST_BUILD
+    COMMAND riscv64-unknown-elf-gcc -I${RISCVAPP_DIR}/ -I${RISCVAPP_DIR}/generated/ -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${RISCVAPP_DIR}/sections.lds,--strip-debug -ffreestanding -nostdlib -o ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink/blink.c 
+    COMMAND riscv64-unknown-elf-objcopy -O verilog ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/blink/blink.hex
+    COMMAND sed -i='' 's/@1000/@0000/g' ${RISCVAPP_DIR}/blink/blink.hex  
+    COMMAND ${RISCVAPP_DIR}/blink/util/caravel_hkflash.py ${RISCVAPP_DIR}/blink/blink.hex
 )  
+else() 
+add_custom_command(
+    TARGET run POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "SPIKE"
+)  
+endif()
 
 add_custom_target(BUILD_SUCCESSFUL ALL
                    DEPENDS ${ALL_TARGETS}
