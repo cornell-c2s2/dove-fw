@@ -147,28 +147,33 @@ void blink()
     delay(8000000);
 }
 
-int get_bit( int src, int n ) {
-    return ( src >> n ) & 0x1;
+int get_bit(int src, int n)
+{
+    return (src >> n) & 0x1;
 }
 
 //------------------------------------------------------------------------
 // Writing
 //------------------------------------------------------------------------
 
-int set_bit( int src, int n ) {
-    return src | ( 0x1 << n );
+int set_bit(int src, int n)
+{
+    return src | (0x1 << n);
 }
 
-int reset_bit( int src, int n ) {
-    return src & ~( 0x1 << n );
+int reset_bit(int src, int n)
+{
+    return src & ~(0x1 << n);
 }
-int mul( int src1, int src2 ) {
+int mul(int src1, int src2)
+{
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invert operands to make positive, if necessary
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    if( ( src1 < 0 ) & ( src2 < 0 ) ) {
+    if ((src1 < 0) & (src2 < 0))
+    {
         src1 = -src1;
         src2 = -src2;
     }
@@ -180,39 +185,48 @@ int mul( int src1, int src2 ) {
     int opa;
     int opb;
 
-    if( src1 < 0 ) {
+    if (src1 < 0)
+    {
         opa = src1;
         opb = src2;
-    } else if( src2 < 0 ) {
+    }
+    else if (src2 < 0)
+    {
         opa = src2;
         opb = src1;
-    } else if( src1 < src2 ) {
+    }
+    else if (src1 < src2)
+    {
         opa = src2;
         opb = src1;
-    } else {
+    }
+    else
+    {
         opa = src1;
         opb = src2;
     }
 
     int acc = 0;
 
-    while( opb > 0 ){
-        if( get_bit( opb, 0 ) ) {
+    while (opb > 0)
+    {
+        if (get_bit(opb, 0))
+        {
             acc += opa;
         }
 
-        opa = ( opa << 1 );
-        opb = ( opb >> 1 );
+        opa = (opa << 1);
+        opb = (opb >> 1);
     }
 
     return acc;
 }
 
-void matched_filter(int *input_signal, int signal_length, int *filter_kernel, int kernel_length, int *filtered_signal)
+void matched_filter(char *input_signal, char signal_length, char *filter_kernel, char kernel_length, char *filtered_signal)
 {
     // Allocate memory for the filtered signal
     // N + M - 1
-    int filtered_length = signal_length + kernel_length - 1;
+    char filtered_length = signal_length + kernel_length - 1;
 
     for (int i = 0; i < filtered_length; ++i)
     {
@@ -227,7 +241,6 @@ void matched_filter(int *input_signal, int signal_length, int *filter_kernel, in
         }
     }
 }
-
 
 // // ONLY WORKS FOR UNSIGNED INTS
 // int __mulsi3(int a, int b)
@@ -341,7 +354,9 @@ void main()
     // Use matched filter
     matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
-    int filtered_size = fake_size + kernel_size - 1;
+    int
+
+        filtered_size = fake_size + kernel_size - 1;
 
     for (int i = 0; i < filtered_size; i++)
     {
@@ -355,6 +370,4 @@ void main()
     reg_gpio_out = 0; // ON
     reg_mprj_datah = 0x0000003f;
     reg_mprj_datal = 0xffffffff;
-
-
 }
