@@ -1,6 +1,10 @@
 #include "../board_utils/defs.h"
 #include "../include/src.h"
 #include "../../include/fake.h"
+#include "../../include/bird_2.h"
+#include "../../include/bird_1.h"
+int num_samples = 10;
+int kernel_length = 10; 
 // #include "../local_defs.h"
 // #include "../stub.c"
 
@@ -131,20 +135,6 @@ void delay(const int d)
 //         putchar(*(p++));
 // }
 
-void blink()
-{
-    reg_gpio_out = 0; // ON
-    reg_mprj_datah = 0x0000003f;
-    reg_mprj_datal = 0xffffffff;
-
-    delay(8000000);
-
-    reg_gpio_out = 1; // OFF
-    reg_mprj_datal = 0x00000000;
-    reg_mprj_datah = 0x00000000;
-
-    delay(8000000);
-}
 // For now literally copy and paste from the include file, TODO: fix makefile to include these
 int get_bit( int src, int n ) {
     return ( src >> n ) & 0x1;
@@ -227,6 +217,66 @@ void matched_filter(char *input_signal, int signal_length, char *filter_kernel, 
     }
   }
 }
+
+void blink(bool on)
+{
+    if (on) {
+    reg_gpio_out = 0; // ON
+    reg_mprj_datah = 0x0000003f;
+    reg_mprj_datal = 0xffffffff;
+
+    delay(8000000);
+    } else {
+
+    reg_gpio_out = 1; // OFF
+    reg_mprj_datal = 0x00000000;
+    reg_mprj_datah = 0x00000000;
+
+    delay(8000000);
+    }
+}
+
+
+// puts samples in ptr
+void get_samples(char* ptr, int num_samples, int kernel_length) {
+    #ifdef RISCV_BOARD
+        // Use Kene's function
+        // get_data(ptr,num_samples)
+    #else 
+        //Get sample from bird files
+
+        // bird_2 has noise
+        for (int i = 0; i < num_samples; i++){
+            ptr[i] = samples[75000 + i];
+        }
+
+        // bird_1 has no noise
+        for (int i = 0; i < kernel_length; i++){
+            ptr[num_samples + i] = samples2[100000 + i];
+        }
+    #endif 
+}
+
+void new_matched_filter(char *filtered_signal,int signal_length, int kernel_length)
+{
+  // Get length of the output signal: N + M - 1
+  int filtered_length = signal_length + kernel_length - 1;
+
+  // Starting index for putting matched filter results
+  int start = signal_length + kernel_length;
+
+  for (int i = 0; i < filtered_length; ++i)
+  {
+    for (int j = 0; j < kernel_length; ++j)
+    {
+      if (i >= j && i - j < signal_length)
+      {
+        filtered_signal[start + i] += mul (filtered_signal[i - j], filtered_signal[signal_length + (kernel_length - 1 - j)]);
+      }
+    }
+  }
+}
+
 
 int main()
 {
@@ -317,20 +367,31 @@ int main()
     // delay(5000000);
     // }
 
+    // Allocate memory, about 2kb
+    // Entries 0 to num_samples - 1 contain data with noise (AKA actual data)
+    // Entries num_samples to kernel_length - 1 contain the template signal to match with
+    // Entries kernel_length to num_samples + kernel_length - 2 contain the result of the matched filter
+    // It is the duty of the caller to make sure there is enough space in the ptr. 
+
+    //put samples in ptr
+    get_samples(pointer, num_samples, kernel_length); 
+
+    //Note: unsigned chars goes from 0 to 255, signed goes from -127 to 127
+    // We will used signed chars to get real data from bird_1.h and bird_2.h
+
     // Use matched filter
-    
-    matched_filter(fake_samples,fake_size,kernel_samples,kernel_size,filtered);
+    new_matched_filter(pointer,num_samples,kernel_length);
     // matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
-    char filtered_size = fake_size + kernel_size - 1;
+    char filtered_size = num_samples + kernel_length - 1;
+    // Starting index for putting matched filter results
+    int start = num_samples + kernel_length;
 
     for (int i = 0; i < filtered_size; i++)
     {
-
-        if (filtered[i] > 1)
-        {
-            blink();
-        }
+    
+        blink(pointer[start + i] != 0);
+        
         delay(8000000);
     }
     return 0;

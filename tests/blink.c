@@ -1,6 +1,11 @@
 #include "../board_utils/defs.h"
 #include "../include/src.h"
 #include "../include/fake.h"
+#include "../include/mem_array.h"
+
+// define number of samples wanted for data and kernel
+int num_samples = 100;
+int kernel_length = 20; 
 // #include "../local_defs.h"
 // #include "../stub.c"
 
@@ -131,19 +136,22 @@ void delay(const int d)
 //         putchar(*(p++));
 // }
 
-void blink()
+void blink(bool on)
 {
+    if (on) {
     reg_gpio_out = 0; // ON
     reg_mprj_datah = 0x0000003f;
     reg_mprj_datal = 0xffffffff;
 
     delay(8000000);
+    } else {
 
     reg_gpio_out = 1; // OFF
     reg_mprj_datal = 0x00000000;
     reg_mprj_datah = 0x00000000;
 
     delay(8000000);
+    }
 }
 
 
@@ -236,20 +244,32 @@ int main()
     // delay(5000000);
     // }
 
+    // Allocate memory, about 2kb
+    // Entries 0 to num_samples - 1 contain data with noise (AKA actual data)
+    // Entries num_samples to kernel_length - 1 contain the template signal to match with
+    // Entries kernel_length to num_samples + kernel_length - 2 contain the result of the matched filter
+    // It is the duty of the caller to make sure there is enough space in the ptr. 
+    char *ptr = mem_arr_alloc();
+
+    //put samples in ptr
+    get_samples(ptr, num_samples, kernel_length); 
+
+    //Note: unsigned chars goes from 0 to 255, signed goes from -127 to 127
+    // We will used signed chars to get real data from bird_1.h and bird_2.h
+
     // Use matched filter
-    
-    matched_filter(fake_samples,fake_size,kernel_samples,kernel_size,filtered);
+    new_matched_filter(ptr,num_samples,kernel_length);
     // matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
-    char filtered_size = fake_size + kernel_size - 1;
+    char filtered_size = num_samples + kernel_length - 1;
+    // Starting index for putting matched filter results
+    int start = num_samples + kernel_length;
 
     for (int i = 0; i < filtered_size; i++)
     {
-
-        if (filtered[i] > 1)
-        {
-            blink();
-        }
+    
+        blink(filtered[start + i] > 10);
+        
         delay(8000000);
     }
     return 0;

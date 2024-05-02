@@ -1,3 +1,6 @@
+// This sample has some noise (bird in the background), use as real samples
+// A good place to start getting samples is around the 100000 index
+// Around 120000 there is noise and between 150000 and 200000 there is no noise.
 const unsigned int sampleRate2 = 48000;
 const unsigned int sampleCount2 = 344665;
 const signed char samples2[] = {
