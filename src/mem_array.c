@@ -15,6 +15,7 @@ char* mem_arr_alloc() {
     // Otherwise, use malloc
 #else
     return ( char* ) malloc( 2048 );
+#endif
 }
 
 void  mem_arr_free( char* ptr ) {

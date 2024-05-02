@@ -40,6 +40,6 @@
 /// @param signal_length The length of the input signal.
 /// @param filter_kernel The array representing the template for the matched filter.
 /// @param kernel_length The length of the filter kernel
-void matched_filter(int *input_signal, int signal_length, int *filter_kernel, int kernel_length, int *filtered_signal);
+void matched_filter(char *input_signal, int signal_length, char *filter_kernel, int kernel_length, char *filtered_signal);
 
 #endif

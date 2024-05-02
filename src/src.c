@@ -1,4 +1,5 @@
 #include "src.h"
+#include "arith.h"
 
 // Preprocessing code
 // void normalize(float *data, size_t num_samples, double targetPeak)
@@ -93,7 +94,7 @@
 
 //   return pcmDataFloat;
 // }
-void matched_filter(int *input_signal, int signal_length, int *filter_kernel, int kernel_length, int *filtered_signal)
+void matched_filter(char *input_signal, int signal_length, char *filter_kernel, int kernel_length, char *filtered_signal)
 {
   // Allocate memory for the filtered signal
   // N + M - 1
@@ -107,7 +108,7 @@ void matched_filter(int *input_signal, int signal_length, int *filter_kernel, in
     {
       if (i >= j && i - j < signal_length)
       {
-        filtered_signal[i] += input_signal[i - j] * filter_kernel[kernel_length - 1 - j];
+        filtered_signal[i] += mul (input_signal[i - j], filter_kernel[kernel_length - 1 - j]);
       }
     }
   }

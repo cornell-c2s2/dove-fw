@@ -22,7 +22,7 @@ else ifeq ($(LANGUAGE), C)
 	SOURCE_SUFFIX = .c
 	HEADER_SUFFIX = .h
 else
-	$(error Language not supported. Please use C or C++)
+$(error Language not supported. Please use C or C++)
 endif
 
 LDFLAGS = -lm
@@ -61,7 +61,7 @@ build :
 
 
 flash: blink.hex
-	python3 ../board_utils/util/caravel_hkflash.py blink.hex
+	python3 board_utils/util/caravel_hkflash.py blink.hex
 
 %.o :
 	@echo -e "${CYAN} - Building object: $@${RESET}"

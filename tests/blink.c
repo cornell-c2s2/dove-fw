@@ -1,6 +1,6 @@
 #include "../board_utils/defs.h"
-#include "src.h"
-#include "fake.h"
+#include "../include/src.h"
+#include "../include/fake.h"
 // #include "../local_defs.h"
 // #include "../stub.c"
 
@@ -146,25 +146,6 @@ void blink()
     delay(8000000);
 }
 
-// // ONLY WORKS FOR UNSIGNED INTS
-// int __mulsi3(int a, int b)
-// {
-
-//     int acc = 0;
-
-//     while (b > 0)
-//     {
-//         if ((b & 0x1))
-//         {
-//             acc += a;
-//         }
-
-//         b >> 1;
-//         a << 1;
-//     }
-
-//     return acc;
-// }
 
 int main()
 {
@@ -256,14 +237,16 @@ int main()
     // }
 
     // Use matched filter
-    matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
+    
+    matched_filter(fake_samples,fake_size,kernel_samples,kernel_size,filtered);
+    // matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
     char filtered_size = fake_size + kernel_size - 1;
 
     for (int i = 0; i < filtered_size; i++)
     {
 
-        if (filtered[i] > 4)
+        if (filtered[i] > 1)
         {
             blink();
         }
