@@ -12,6 +12,9 @@ project(DOVE_FW VERSION 1.0)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+#enables testing
+enable_testing()
+
 #define different subdirectories
 set(UTILS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/utils")
 set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
@@ -95,7 +98,7 @@ else()
   )
 
   #Adds custom target named check (runs tests)
-  add_custom_target(check)
+  add_custom_target(check COMMAND ctest "--timeout" "10")
 
   #Sets all test files
   set(TEST_FILES
@@ -103,13 +106,14 @@ else()
     test_bitops.c
   )
 
-  #Runs through each test file and creates an executable (of file name without extension)
+  #Runs through each test file and creates an executable (of file name without extension) while also testing with ctest
   foreach(TEST_FILE ${TEST_FILES})
     remove_extension(TEST_BIN ${TEST_FILE})
     set(TEST_SRC "${TESTS_DIR}/${TEST_FILE}")
     add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_SRC})
     target_link_libraries(${TEST_BIN} m UTIL_LIBRARY) 
     add_dependencies(check ${TEST_BIN})
+    add_test(${TEST_BIN} ${TEST_BIN})
   endforeach(TEST_FILE)
 
   #Displays that all tests are built to user
