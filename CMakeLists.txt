@@ -113,7 +113,7 @@ else()
     add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_SRC})
     target_link_libraries(${TEST_BIN} m UTIL_LIBRARY) 
     add_dependencies(check ${TEST_BIN})
-    add_test(${TEST_BIN} ${TEST_BIN})
+    add_test(${TEST_BIN} COMMAND spike pk ${TEST_BIN})
   endforeach(TEST_FILE)
 
   #Displays that all tests are built to user
