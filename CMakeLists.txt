@@ -12,6 +12,9 @@ project(DOVE_FW VERSION 1.0)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+# Specify toolchain
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/riscv64.cmake")
+
 #enables testing
 enable_testing()
 
@@ -19,7 +22,7 @@ enable_testing()
 set(UTILS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/utils")
 set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(FILTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/filter")
-set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/riscv-app")
+set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/board-utils")
 
 #Create boolean that specifies if code is running on the riscv board
 option(RISCV_BOARD OFF)
