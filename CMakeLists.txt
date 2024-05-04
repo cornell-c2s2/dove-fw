@@ -12,9 +12,6 @@ project(DOVE_FW VERSION 1.0)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-# Specify toolchain
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/riscv64.cmake")
-
 #enables testing
 enable_testing()
 
@@ -69,13 +66,15 @@ function(remove_extension VARNAME FILE_NAME)
   set(${VARNAME} "${NAME_WITHOUT_EXT}" PARENT_SCOPE)
 endfunction()
 
-#Includes all the files in utils directory (used for tests)
+#Includes all the files in utils directory
 include_directories(${UTILS_DIR})
 
 #Creates a library with all the util files
 set(UTIL_FILES
   arith.c
   bitops.c
+  mem_array.c
+  src.c
 )
 foreach(UTIL_FILE ${UTIL_FILES})
   set(LIB_UTILS ${LIB_UTILS} "${UTILS_DIR}/${UTIL_FILE}")
@@ -88,11 +87,11 @@ if(RISCV_BOARD)
   #Adds custom command to run that flashes to riscv board
   add_custom_command(
     TARGET run POST_BUILD
-    COMMAND riscv64-unknown-elf-gcc -I${RISCVAPP_DIR}/ -I${RISCVAPP_DIR}/generated/ -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${RISCVAPP_DIR}/sections.lds,--strip-debug -ffreestanding -nostdlib -o ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink/blink.c 
+    COMMAND riscv64-unknown-elf-gcc -I${RISCVAPP_DIR}/ -I${RISCVAPP_DIR}/generated/ -I${UTILS_DIR} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${RISCVAPP_DIR}/sections.lds,--strip-debug -ffreestanding -nostdlib -o ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink/blink.c 
     COMMAND riscv64-unknown-elf-objcopy -O verilog ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/blink/blink.hex
     COMMAND sed -i='' 's/@1000/@0000/g' ${RISCVAPP_DIR}/blink/blink.hex  
     COMMAND ${RISCVAPP_DIR}/blink/util/caravel_hkflash.py ${RISCVAPP_DIR}/blink/blink.hex
-  )  
+  ) 
 else()
   #Adds custom command to run that runs app through spike
   add_custom_command(
