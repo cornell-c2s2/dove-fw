@@ -21,6 +21,21 @@ set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 set(FILTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/filter")
 set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/board-utils")
 
+#TODO: Change to direct file paths (need to change remove extension function)
+set(UTIL_FILES
+  arith.c
+  bitops.c
+  mem_array.c
+  src.c
+)
+set(TEST_FILES
+    test_arith.c
+    test_bitops.c
+)
+set(APP_FILES
+    blink.c
+)
+
 #Create boolean that specifies if code is running on the riscv board
 option(RISCV_BOARD OFF)
 
@@ -70,24 +85,31 @@ endfunction()
 include_directories(${UTILS_DIR})
 
 #Creates a library with all the util files
-set(UTIL_FILES
-  arith.c
-  bitops.c
-  mem_array.c
-  src.c
-)
 foreach(UTIL_FILE ${UTIL_FILES})
   set(LIB_UTILS ${LIB_UTILS} "${UTILS_DIR}/${UTIL_FILE}")
 endforeach(UTIL_FILE)
 add_library(UTIL_LIBRARY ${LIB_UTILS})
 
+
+
 #Adds custom target named run
-add_custom_target(run)
+foreach(APP_FILE ${APP_FILES})
+remove_extension(APP_BIN ${APP_FILE})
+add_custom_target(build-${APP_BIN} )
+add_custom_target(run-${APP_BIN})
 if(RISCV_BOARD)
-  #Adds custom command to run that flashes to riscv board
+  # include_directories(${RISCVAPP_DIR})
+  # add_executable(${APP_BIN} EXCLUDE_FROM_ALL ${RISCVAPP_DIR}/blink/blink.c)
+  # target_link_libraries(${APP_BIN} m UTIL_LIBRARY)
+  # add_dependencies(build-${APP_BIN} ${APP_BIN})
+
+  add_dependencies(build-${APP_BIN} UTIL_LIBRARY) 
   add_custom_command(
-    TARGET run POST_BUILD
-    COMMAND riscv64-unknown-elf-gcc -I${RISCVAPP_DIR}/ -I${RISCVAPP_DIR}/generated/ -I${UTILS_DIR} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${RISCVAPP_DIR}/sections.lds,--strip-debug -ffreestanding -nostdlib -o ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink/blink.c 
+    TARGET build-${APP_BIN} POST_BUILD
+    COMMAND riscv64-unknown-elf-gcc -I${RISCVAPP_DIR}/ -I${RISCVAPP_DIR}/generated/ -I${UTILS_DIR}/ -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${RISCVAPP_DIR}/sections.lds,--strip-debug -ffreestanding -nostdlib -o ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink/blink.c 
+  )
+  add_custom_command(
+    TARGET run-${APP_BIN} POST_BUILD
     COMMAND riscv64-unknown-elf-objcopy -O verilog ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/blink/blink.hex
     COMMAND sed -i='' 's/@1000/@0000/g' ${RISCVAPP_DIR}/blink/blink.hex  
     COMMAND ${RISCVAPP_DIR}/blink/util/caravel_hkflash.py ${RISCVAPP_DIR}/blink/blink.hex
@@ -95,18 +117,16 @@ if(RISCV_BOARD)
 else()
   #Adds custom command to run that runs app through spike
   add_custom_command(
-    TARGET run POST_BUILD
+    TARGET run-${APP_BIN} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "SPIKE APP TO COME"
   )
+endif()
+endforeach(APP_FILE)
 
+
+if(NOT RISCV_BOARD)
   #Adds custom target named check (runs tests)
   add_custom_target(check COMMAND ctest "--timeout" "10")
-
-  #Sets all test files
-  set(TEST_FILES
-    test_arith.c
-    test_bitops.c
-  )
 
   #Runs through each test file and creates an executable (of file name without extension) while also testing with ctest
   foreach(TEST_FILE ${TEST_FILES})

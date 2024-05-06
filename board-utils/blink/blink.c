@@ -86,7 +86,7 @@ int kernel_length = 20;
 //     reg_mprj_io_16 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
 //     reg_mprj_io_15 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
 //     reg_mprj_io_14 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-//     reg_mprj_io_13 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;>
+//     reg_mprj_io_13 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
 //     reg_mprj_io_12 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
 //     reg_mprj_io_11 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
 //     reg_mprj_io_10 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
@@ -283,7 +283,7 @@ int main()
         int num = ptr[start + i];
         if (num != 0)
         {
-            printf("The value at entry %d is %d\n", start + i, num);
+            // printf("The value at entry %d is %d\n", start + i, num);
         }
     }
     return 0;
