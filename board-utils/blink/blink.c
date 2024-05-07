@@ -2,9 +2,15 @@
 #include "src.h"
 #include "fake.h"
 #include "mem_array.h"
+#include <stdlib.h>
+#include "bird_1.h"
+#include "bird_2.h"
+#include <stdio.h>
+#include "csr.h"
+#include "SPI_Lib_C2S2.h"
 
 // define number of samples wanted for data and kernel
-int num_samples = 100;
+int num_samples = 10;
 int kernel_length = 20;
 // #include "../local_defs.h"
 // #include "../stub.c"
@@ -13,7 +19,7 @@ int kernel_length = 20;
 // #include "../defs_mpw-two-mfix.h"
 
 // --------------------------------------------------------
-// Firmware routines
+// Firmware routines#include <stdio.h>
 // --------------------------------------------------------
 
 // void gpio_program();
@@ -105,6 +111,23 @@ int kernel_length = 20;
 //
 //}
 
+int get_bit( int src, int n ) {
+    return ( src >> n ) & 0x1;
+}
+
+//------------------------------------------------------------------------
+// Writing
+//------------------------------------------------------------------------
+
+int set_bit( int src, int n ) {
+    return src | ( 0x1 << n );
+}
+
+int reset_bit( int src, int n ) {
+    return src & ~( 0x1 << n );
+}
+
+
 void delay(const int d)
 {
 
@@ -135,6 +158,118 @@ void delay(const int d)
 //     while (*p)
 //         putchar(*(p++));
 // }
+
+char *mem_arr_alloc()
+{
+
+    // If we're on the board, use SRAM
+#ifdef RISCV_BOARD
+    return (char *)0x01000000;
+
+    // Otherwise, use malloc
+#else
+    // return (char *)malloc(2048);
+#endif
+}
+
+// puts samples in ptr
+void get_samples(char *ptr, int num_samples, int kernel_length)
+{
+#ifdef RISCV_BOARD
+    // Use Kene's function
+    // get_data(ptr,num_samples)
+    array_read_spi(ptr,num_samples);
+#else
+    // Get sample from bird files
+
+    // bird_2 has noise
+    for (int i = 0; i < num_samples; i++)
+    {
+        ptr[i] = samples[75000 + i];
+    }
+
+    // bird_1 has no noise
+    for (int i = 0; i < kernel_length; i++)
+    {
+        ptr[num_samples + i] = samples2[100000 + i];
+    }
+#endif
+}
+
+void mem_arr_free(char *ptr)
+{
+
+    // If we're on the board, no need to do anything
+
+    // Otherwise, use free
+#ifndef RISCV_BOARD
+    // free(ptr);
+#endif
+}
+int mul( int src1, int src2 ) {
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Invert operands to make positive, if necessary
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    if( ( src1 < 0 ) & ( src2 < 0 ) ) {
+        src1 = -src1;
+        src2 = -src2;
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Iterate over smaller positive operand (opb) for efficiency
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    int opa;
+    int opb;
+
+    if( src1 < 0 ) {
+        opa = src1;
+        opb = src2;
+    } else if( src2 < 0 ) {
+        opa = src2;
+        opb = src1;
+    } else if( src1 < src2 ) {
+        opa = src2;
+        opb = src1;
+    } else {
+        opa = src1;
+        opb = src2;
+    }
+
+    int acc = 0;
+
+    while( opb > 0 ){
+        if( get_bit( opb, 0 ) ) {
+            acc += opa;
+        }
+
+        opa = ( opa << 1 );
+        opb = ( opb >> 1 );
+    }
+
+    return acc;
+}
+void new_matched_filter(char *filtered_signal,int signal_length, int kernel_length)
+{
+  // Get length of the output signal: N + M - 1
+  int filtered_length = signal_length + kernel_length - 1;
+
+  // Starting index for putting matched filter results
+  int start = signal_length + kernel_length;
+
+  for (int i = 0; i < filtered_length; ++i)
+  {
+    for (int j = 0; j < kernel_length; ++j)
+    {
+      if (i >= j && i - j < signal_length)
+      {
+        filtered_signal[start + i] += mul (filtered_signal[i - j], filtered_signal[signal_length + (kernel_length - 1 - j)]);
+      }
+    }
+  }
+}
 
 void blink(bool on)
 {
@@ -283,8 +418,9 @@ int main()
         int num = ptr[start + i];
         if (num != 0)
         {
-            // printf("The value at entry %d is %d\n", start + i, num);
-        }
+        //     blink(true);
+        //     blink(false);
+        // }
     }
     return 0;
 #endif

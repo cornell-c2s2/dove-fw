@@ -4,6 +4,7 @@
         "defs.h": "c",
         "fake.h": "c",
         "src.h": "c",
-        "arith.h": "c"
+        "arith.h": "c",
+        "csr.h": "c"
     }
 }
