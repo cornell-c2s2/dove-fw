@@ -137,13 +137,11 @@ foreach(APP_RPATH ${APP_FILES})
   remove_extension(APP_BIN ${APP_FILE})
   set(APP_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${APP_RPATH}")
 
-  add_custom_target(build-${APP_BIN} )
   add_custom_target(run-${APP_BIN})
 
   add_executable(${APP_BIN} EXCLUDE_FROM_ALL ${APP_PATH})
   target_link_libraries(${APP_BIN} m SRC_LIBRARY)
-  add_dependencies(build-${APP_BIN} ${APP_BIN})
-  add_dependencies(run-${APP_BIN} build-${APP_BIN})
+  add_dependencies(run-${APP_BIN} ${APP_BIN})
 
   if(RISCV_BOARD)
     set(APP_HEX "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.hex")
