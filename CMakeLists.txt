@@ -54,6 +54,7 @@ set(CMAKE_SYSTEM_PROCESSOR riscv64)
 
 set(CMAKE_C_COMPILER ${RISCV_GCC_COMPILER})
 set(CMAKE_CXX_COMPILER ${RISCV_TOOLCHAIN_BIN_PATH}/${CROSS_COMPILE}g++)
+set(CMAKE_ASM_COMPILER ${RISCV_GCC_COMPILER})
 set(CMAKE_OBJCOPY ${RISCV_TOOLCHAIN_BIN_PATH}/${CROSS_COMPILE}objcopy CACHE FILEPATH "The toolchain objcopy command " FORCE)
 set(CMAKE_OBJDUMP ${RISCV_TOOLCHAIN_BIN_PATH}/${CROSS_COMPILE}objdump CACHE FILEPATH "The toolchain objdump command " FORCE)
 
@@ -70,6 +71,12 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 enable_testing()
 
 #------------------------------------------------------------------------
+# Enable both Assembly and C compilation
+#------------------------------------------------------------------------
+
+enable_language(C ASM)
+
+#------------------------------------------------------------------------
 # Define whether we're using the RISCV Board
 #------------------------------------------------------------------------
 
@@ -84,12 +91,14 @@ endif()
 #------------------------------------------------------------------------
 
 if(RISCV_BOARD)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -ffreestanding -nostdlib -o ../crt0_vex.S ../isr.c")
-  add_link_options("-Bstatic -T ${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds --strip-debug")
-  set(SRC_FILES "${SRC_FILES} board-utils/crt0_vex.S board-utils/isr.c" )
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__")
+  add_link_options("-Bstatic -T${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds --strip-debug -ffreestanding -nostdlib")
+  set(SRC_FILES ${SRC_FILES} board-utils/crt0_vex.S board-utils/isr.c )
 else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" CACHE STRING "Spike needs static..." FORCE)
 endif()
+
+SET(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
 
 #------------------------------------------------------------------------
 # remove_extension
