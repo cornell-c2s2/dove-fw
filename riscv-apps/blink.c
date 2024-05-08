@@ -23,7 +23,7 @@ void delay(const int d)
     }
 }
 
-void blink(bool on)
+void blink(int on)
 {
     if (on)
     {
@@ -97,13 +97,12 @@ int main()
     // Initiate the serial transfer
     reg_mprj_xfer = 1;
     while (reg_mprj_xfer == 1);
+    bool should_blink = true;
 
     for (int i = 0; i < 10; i++)
     {
-
-        blink((i/2) == 0);
-
-        delay(8000000);
+        blink(should_blink);
+        should_blink = !should_blink;
     }
     return 0;
 }

@@ -91,8 +91,7 @@ endif()
 #------------------------------------------------------------------------
 
 if(RISCV_BOARD)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__")
-  add_link_options("-Bstatic -T${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds --strip-debug -ffreestanding -nostdlib")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds,--strip-debug -ffreestanding -nostdlib")
   set(SRC_FILES ${SRC_FILES} board-utils/crt0_vex.S board-utils/isr.c )
 else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" CACHE STRING "Spike needs static..." FORCE)
@@ -153,7 +152,7 @@ foreach(APP_RPATH ${APP_FILES})
   add_dependencies(run-${APP_BIN} ${APP_BIN})
 
   if(RISCV_BOARD)
-    set(APP_HEX "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.hex")
+    set(APP_HEX "${CMAKE_CURRENT_BINARY_DIR}/${APP_BIN}.hex")
     add_custom_command(
       TARGET run-${APP_BIN} POST_BUILD
       COMMAND ${CMAKE_OBJCOPY} -O verilog ${APP_BIN} ${APP_HEX}
@@ -163,7 +162,7 @@ foreach(APP_RPATH ${APP_FILES})
   else()
     add_custom_command(
       TARGET run-${APP_BIN} POST_BUILD
-      COMMAND spike pk ${APP_BIN}
+      COMMAND spike pk64 ${APP_BIN}
     )
   endif()
 endforeach(APP_RPATH)
@@ -184,6 +183,6 @@ if(NOT RISCV_BOARD)
     add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_PATH})
     target_link_libraries(${TEST_BIN} m SRC_LIBRARY) 
     add_dependencies(check ${TEST_BIN})
-    add_test(${TEST_BIN} COMMAND spike pk ${TEST_BIN})
+    add_test(NAME ${TEST_BIN} COMMAND spike pk64 ${TEST_BIN})
   endforeach(TEST_RPATH)
 endif()
