@@ -13,8 +13,6 @@
 #else // Can print
 #include "stdio.h"
 #include "stdlib.h"
-#include "bird_1.h"
-#include "bird_2.h"
 #endif
 // define number of samples wanted for data and kernel
 int num_samples = 30;

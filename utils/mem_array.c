@@ -28,7 +28,7 @@ void get_samples(char *ptr, int num_samples, int kernel_length)
 {
 #ifdef RISCV_BOARD
     // Use Kene's function
-    array_read_spi(ptr, num_samples);
+    // run_spi(ptr, num_samples);
 #else
     // Get sample from bird files
 
