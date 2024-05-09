@@ -1,159 +1,202 @@
 #========================================================================
 # CMakeLists.txt
 #========================================================================
+# A CMake Project for building firmware using RISCV
 
-#define minimum CMake version
+#------------------------------------------------------------------------
+# Set the files for the project
+#------------------------------------------------------------------------
+
+set(SRC_FILES
+  utils/arith.c
+  utils/bitops.c
+  utils/mem_array.c
+  utils/src.c
+)
+set(TEST_FILES
+  tests/test_arith.c
+  tests/test_bitops.c
+)
+set(APP_FILES
+  riscv-apps/blink.c
+)
+
+set(INCLUDE_DIRS
+  utils
+  board-utils
+)
+
+#------------------------------------------------------------------------
+# Use the RISCV Compiler
+#------------------------------------------------------------------------
+# Used from riscv64.cmake (from Derin Ozturk)
+#
+# We have to set these before any calls to project() or enable_language()
+
+FIND_FILE(RISCV_GCC_COMPILER "riscv64-unknown-elf-gcc" PATHS ENV INCLUDE)
+if (EXISTS ${RISCV_GCC_COMPILER})
+  message("Found RISC-V GCC Toolchain: ${RISCV_GCC_COMPILER}")
+else()
+  message(FATAL_ERROR "RISC-V GCC Toolchain not found!")
+endif()
+
+get_filename_component(RISCV_TOOLCHAIN_BIN_PATH ${RISCV_GCC_COMPILER} DIRECTORY)
+get_filename_component(RISCV_TOOLCHAIN_BIN_GCC ${RISCV_GCC_COMPILER} NAME_WE)
+get_filename_component(RISCV_TOOLCHAIN_BIN_EXT ${RISCV_GCC_COMPILER} EXT)
+
+message("Toolchain path, prefix, and ext: ${RISCV_TOOLCHAIN_BIN_PATH}, ${RISCV_TOOLCHAIN_BIN_GCC}, ${RISCV_TOOLCHAIN_BIN_EXT}")
+
+STRING(REGEX REPLACE "-gcc" "-" CROSS_COMPILE ${RISCV_TOOLCHAIN_BIN_GCC})
+message("RISC-V Cross Compile: ${CROSS_COMPILE}")
+
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR riscv64)
+
+set(CMAKE_C_COMPILER ${RISCV_GCC_COMPILER})
+set(CMAKE_CXX_COMPILER ${RISCV_TOOLCHAIN_BIN_PATH}/${CROSS_COMPILE}g++)
+set(CMAKE_ASM_COMPILER ${RISCV_GCC_COMPILER})
+set(CMAKE_OBJCOPY ${RISCV_TOOLCHAIN_BIN_PATH}/${CROSS_COMPILE}objcopy CACHE FILEPATH "The toolchain objcopy command " FORCE)
+set(CMAKE_OBJDUMP ${RISCV_TOOLCHAIN_BIN_PATH}/${CROSS_COMPILE}objdump CACHE FILEPATH "The toolchain objdump command " FORCE)
+
+#------------------------------------------------------------------------
+# Boilerplate CMake for the project
+#------------------------------------------------------------------------
+
 cmake_minimum_required(VERSION 3.10)
-
-#set the project name and version
 project(DOVE_FW VERSION 1.0)
 
-#specifies C standard
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-#enables testing
 enable_testing()
 
-#define different subdirectories
-set(UTILS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/utils")
-set(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-set(FILTER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/filter")
-set(RISCVAPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/board-utils")
 
-#TODO: Change to direct file paths (need to change remove extension function)
-set(UTIL_FILES
-  arith.c
-  bitops.c
-  mem_array.c
-  src.c
-)
-set(TEST_FILES
-    test_arith.c
-    test_bitops.c
-)
-set(APP_FILES
-    blink.c
-)
+#------------------------------------------------------------------------
+# Enable both Assembly and C compilation
+#------------------------------------------------------------------------
 
-#Create boolean that specifies if code is running on the riscv board
+enable_language(C ASM)
+
+#------------------------------------------------------------------------
+# Define whether we're using the RISCV Board
+#------------------------------------------------------------------------
+
 option(RISCV_BOARD OFF)
 
-#Adds riscv variable to be used in C code 
 if(RISCV_BOARD) 
   add_compile_definitions(RISCV_BOARD="1")
 endif()
 
-#Riscv cross-comp definitions
-add_compile_definitions(PROJ_ROOT=\"${PROJECT_SOURCE_DIR}\")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O3 -std=c11")
-message("CMake detected system processor: ${CMAKE_SYSTEM_PROCESSOR}")
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL riscv64)
-  message("Cross-compiling with RISCV-GNU GCC Toolchain!")
-  message("Cmake flags for riscv64: ${CMAKE_C_FLAGS}")
-endif()
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+#------------------------------------------------------------------------
+# Define which pk to use based on processor
+#------------------------------------------------------------------------
 
-#Colors definitions
-if(NOT WIN32)
-  string(ASCII 27 Esc)
-  set(Reset 		    "${Esc}[m")
-  set(Bold  		    "${Esc}[1m")
-  set(Red         	"${Esc}[31m")
-  set(Green       	"${Esc}[32m")
-  set(Blue        	"${Esc}[34m")
-  set(Cyan        	"${Esc}[36m")
-  set(Magenta     	"${Esc}[35m")
-  set(Yellow      	"${Esc}[33m")
-  set(White       	"${Esc}[37m")
-  set(BoldRed     	"${Esc}[1;31m")
-  set(BoldGreen   	"${Esc}[1;32m")
-  set(BoldBlue    	"${Esc}[1;34m")
-  set(BoldCyan    	"${Esc}[1;36m")
-  set(BoldMagenta 	"${Esc}[1;35m")
-  set(BoldYellow  	"${Esc}[1;33m")
-  set(BoldWhite   	"${Esc}[1;37m")
+if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64")
+    set(PK_EXECUTABLE "pk")
+elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
+    set(PK_EXECUTABLE "pk64")
+else()
+    #message(FATAL_ERROR "Unsupported architecture")
+    set(PK_EXECUTABLE "pk64")
 endif()
 
-#Removes file suffix extensions
+#------------------------------------------------------------------------
+# Define flags and other sources based on how we're running the code
+#------------------------------------------------------------------------
+
+if(RISCV_BOARD)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds,--strip-debug -ffreestanding -nostdlib")
+  set(SRC_FILES ${SRC_FILES} board-utils/crt0_vex.S board-utils/isr.c )
+else()
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" CACHE STRING "Spike needs static..." FORCE)
+endif()
+
+SET(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
+
+#------------------------------------------------------------------------
+# remove_extension
+#------------------------------------------------------------------------
+# A function to remove a file's extension
+
 function(remove_extension VARNAME FILE_NAME)
   string(REGEX REPLACE "\\.[^.]*$" "" NAME_WITHOUT_EXT ${FILE_NAME})
   set(${VARNAME} "${NAME_WITHOUT_EXT}" PARENT_SCOPE)
 endfunction()
 
-#Includes all the files in utils directory
-include_directories(${UTILS_DIR})
+#-------------------------------------------------------------------------
+# get_leaf
+#-------------------------------------------------------------------------
+# Gets the leaf file of a path.
 
-#Creates a library with all the util files
-foreach(UTIL_FILE ${UTIL_FILES})
-  set(LIB_UTILS ${LIB_UTILS} "${UTILS_DIR}/${UTIL_FILE}")
-endforeach(UTIL_FILE)
-add_library(UTIL_LIBRARY ${LIB_UTILS})
+function(get_leaf VARNAME FILE_NAME)
+  string(REGEX REPLACE "[^/]*/" "" NAME_WITHOUT_EXT ${FILE_NAME})
+  set(${VARNAME} "${NAME_WITHOUT_EXT}" PARENT_SCOPE)
+endfunction()
 
+#------------------------------------------------------------------------
+# Include all directories in INCLUDE_DIRS
+#------------------------------------------------------------------------
 
+foreach(INCLUDE_DIR ${INCLUDE_DIRS})
+  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}")
+endforeach(INCLUDE_DIR)
 
-#Adds custom target named run
-foreach(APP_FILE ${APP_FILES})
-remove_extension(APP_BIN ${APP_FILE})
-add_custom_target(build-${APP_BIN} )
-add_custom_target(run-${APP_BIN})
-if(RISCV_BOARD)
-  # include_directories(${RISCVAPP_DIR})
-  # add_executable(${APP_BIN} EXCLUDE_FROM_ALL ${RISCVAPP_DIR}/blink/blink.c)
-  # target_link_libraries(${APP_BIN} m UTIL_LIBRARY)
-  # add_dependencies(build-${APP_BIN} ${APP_BIN})
+#------------------------------------------------------------------------
+# Create a library with our source files
+#------------------------------------------------------------------------
 
-  add_dependencies(build-${APP_BIN} UTIL_LIBRARY) 
-  add_custom_command(
-    TARGET build-${APP_BIN} POST_BUILD
-    COMMAND riscv64-unknown-elf-gcc -I${RISCVAPP_DIR}/ -I${RISCVAPP_DIR}/generated/ -I${UTILS_DIR}/ -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${RISCVAPP_DIR}/sections.lds,--strip-debug -ffreestanding -nostdlib -o ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/crt0_vex.S ${RISCVAPP_DIR}/isr.c ${RISCVAPP_DIR}/blink/blink.c 
-  )
-  add_custom_command(
-    TARGET run-${APP_BIN} POST_BUILD
-    COMMAND riscv64-unknown-elf-objcopy -O verilog ${RISCVAPP_DIR}/blink/blink.elf ${RISCVAPP_DIR}/blink/blink.hex
-    COMMAND sed -i='' 's/@1000/@0000/g' ${RISCVAPP_DIR}/blink/blink.hex  
-    COMMAND ${RISCVAPP_DIR}/blink/util/caravel_hkflash.py ${RISCVAPP_DIR}/blink/blink.hex
-  ) 
-else()
-  #Adds custom command to run that runs app through spike
-  add_custom_command(
-    TARGET run-${APP_BIN} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "SPIKE APP TO COME"
-  )
-endif()
-endforeach(APP_FILE)
+foreach(SRC_FILE ${SRC_FILES})
+  set(LIB_SRCS ${LIB_SRCS} "${CMAKE_CURRENT_SOURCE_DIR}/${SRC_FILE}")
+endforeach(SRC_FILE)
+add_library(SRC_LIBRARY STATIC ${LIB_SRCS})
 
+#------------------------------------------------------------------------
+# Add a run target for each application, to run the application
+#------------------------------------------------------------------------
+
+foreach(APP_RPATH ${APP_FILES})
+  get_leaf(APP_FILE ${APP_RPATH})
+  remove_extension(APP_BIN ${APP_FILE})
+  set(APP_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${APP_RPATH}")
+
+  add_custom_target(run-${APP_BIN})
+
+  add_executable(${APP_BIN} EXCLUDE_FROM_ALL ${APP_PATH})
+  target_link_libraries(${APP_BIN} m SRC_LIBRARY)
+  add_dependencies(run-${APP_BIN} ${APP_BIN})
+
+  if(RISCV_BOARD)
+    set(APP_HEX "${CMAKE_CURRENT_BINARY_DIR}/${APP_BIN}.hex")
+    add_custom_command(
+      TARGET run-${APP_BIN} POST_BUILD
+      COMMAND ${CMAKE_OBJCOPY} -O verilog ${APP_BIN} ${APP_HEX}
+      COMMAND sed -i='' 's/@1000/@0000/g' ${APP_HEX}
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/board-utils/caravel_hkflash.py ${APP_HEX}
+    ) 
+  else()
+    add_custom_command(
+      TARGET run-${APP_BIN} POST_BUILD
+      COMMAND spike ${PK_EXECUTABLE} ${APP_BIN}
+    )
+  endif()
+endforeach(APP_RPATH)
+
+#------------------------------------------------------------------------
+# Test files when using spike
+#------------------------------------------------------------------------
 
 if(NOT RISCV_BOARD)
   #Adds custom target named check (runs tests)
   add_custom_target(check COMMAND ctest "--timeout" "10")
 
   #Runs through each test file and creates an executable (of file name without extension) while also testing with ctest
-  foreach(TEST_FILE ${TEST_FILES})
+  foreach(TEST_RPATH ${TEST_FILES})
+    get_leaf(TEST_FILE ${TEST_RPATH})
     remove_extension(TEST_BIN ${TEST_FILE})
-    set(TEST_SRC "${TESTS_DIR}/${TEST_FILE}")
-    add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_SRC})
-    target_link_libraries(${TEST_BIN} m UTIL_LIBRARY) 
+    set(TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${TEST_RPATH}")
+    add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_PATH})
+    target_link_libraries(${TEST_BIN} m SRC_LIBRARY) 
     add_dependencies(check ${TEST_BIN})
-    add_test(${TEST_BIN} COMMAND spike pk ${TEST_BIN})
-  endforeach(TEST_FILE)
-
-  #Displays that all tests are built to user
-  add_custom_command(TARGET check POST_BUILD
-      COMMAND echo ""
-      COMMAND echo "${Green}########################################${Reset}"
-      COMMAND echo "${Green}## All tests built in build directory${Reset}"
-      COMMAND echo "${Green}########################################${Reset}"
-      COMMAND echo ""
-  )
+    add_test(NAME ${TEST_BIN} COMMAND spike ${PK_EXECUTABLE} ${TEST_BIN})
+  endforeach(TEST_RPATH)
 endif()
-
-#Displays general C2S2 text for make without target
-add_custom_target(BUILD_SUCCESSFUL ALL
-    DEPENDS ${ALL_TARGETS}
-    COMMAND ${CMAKE_COMMAND} -E echo ""
-    COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}########################################${Reset}"
-    COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}## C2S2 Build System${Reset}"
-    COMMAND ${CMAKE_COMMAND} -E echo "${Magenta}########################################${Reset}"
-    COMMAND ${CMAKE_COMMAND} -E echo ""
-)

@@ -9,25 +9,15 @@ A match filter implementation for the C2S2's Dove RISC-V processor (`RV32I_ZICSR
 mkdir build
 cd build
 
-# To use riscv
-cmake .. -DCMAKE_TOOLCHAIN_FILE=../riscv64.cmake -DRISCV_BOARD=ON
+# To compile for spike
+cmake ..
 
-# To use spike
-cmake .. -DCMAKE_TOOLCHAIN_FILE=../riscv64.cmake -DRISCV_BOARD=OFF
+# To compile for the eFabless RISCV board
+cmake .. -DRISCV_BOARD=ON
 
-# To run the apps
-make run
-
-# Only works on spike
-make test_bitops
-make test_arith
-# Or for both tests
+# To run the tests (only on Spike)
 make check
-```
 
-You can then run the tests (build in the `build` directory) as spike executables
-
-```bash
-spike pk ./test_bitops
-spike pk ./test_arith
+# To run a program <prog> (on spike or the board)
+make run-<prog>
 ```
