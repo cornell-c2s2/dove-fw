@@ -12,10 +12,36 @@
 #include "SPI_Lib_C2S2.h"
 #else // Can print
 #include "stdio.h"
+#include "stdlib.h"
+#include "bird_1.h"
+#include "bird_2.h"
 #endif
 // define number of samples wanted for data and kernel
-int num_samples = 10;
-int kernel_length = 20;
+int num_samples = 30;
+int kernel_length = 10;
+
+// puts samples in ptr
+void get_samples(char *ptr, int num_samples, int kernel_length)
+{
+#ifdef RISCV_BOARD
+    // Use Kene's function
+    array_read_spi(ptr,num_samples);
+#else
+    // Get sample from bird files
+
+    // bird_2 has noise
+    for (int i = 0; i < num_samples; i++)
+    {
+        ptr[i] = samples[75000 + i];
+    }
+
+    // bird_1 has no noise
+    for (int i = 0; i < kernel_length; i++)
+    {
+        ptr[num_samples + i] = samples2[100000 + i];
+    }
+#endif
+}
 
 void delay(const int d)
 {
@@ -55,12 +81,13 @@ void blink(bool on)
     }
 }
 
+
 int main()
 {
     // Allocate memory, about 2kb
     // Entries 0 to num_samples - 1 contain data with noise (AKA actual data)
     // Entries num_samples to kernel_length - 1 contain the template signal to match with
-    // Entries kernel_length to num_samples + kernel_length - 2 contain the result of the matched filter
+    // Entries kernel_length to num_samples + kernel_length - 1 contain the result of the matched filter
     // It is the duty of the caller to make sure there is enough space in the ptr.
     char *ptr = mem_arr_alloc();
 
@@ -78,7 +105,8 @@ int main()
     // Starting index for putting matched filter results
     int start = num_samples + kernel_length;
 
-// int i, j, k;
+    // If the value passes the threshold then we say a Scrubjay is detected
+    int threshold = 100;
 #ifdef RISCV_BOARD
     reg_gpio_mode1 = 1;
     reg_gpio_mode0 = 0;
@@ -133,57 +161,29 @@ int main()
     reg_mprj_xfer = 1;
     while (reg_mprj_xfer == 1)
         ;
-    //
-    //    /* GPIO 0 is turned off to prevent toggling the debug pin;	*/
-    //    /* For debug, make this an output and drive it externally	*/
-    //    /* to ground.						*/
-    //__muls
-    //    reg_mprj_io_0  = GPIO_MODE_MGMT_STD_ANALOG;
-
-    //    gpio_program();
-    //    gpio_program_local();
-
-    //    reg_uart_enable = 1;
-
-    //    print("Hello World !!");
-    //    putchar('x');
-
-    // Main code
-    // while (1)
-    // {
-
-    // reg_gpio_out = 1; // OFF
-    // reg_mprj_datal = 0x00000080;
-    // reg_mprj_datah = 0x00000000;
-
-    // delay(5000000);
-
-    // reg_gpio_out = 0; // ON
-    // reg_mprj_datah = 0x0000003f;
-    // reg_mprj_datal = 0xffffff7f;
-
-    // delay(5000000);
-    // }
 
     // If on board blink
     for (int i = 0; i < filtered_size; i++)
     {
 
-        blink(ptr[start + i] != 0);
+        blink(ptr[start + i] > threshold);
 
         delay(8000000);
     }
-    return 0;
 #else
     // If not on board we print values!
     for (int i = 0; i < filtered_size; i++)
     {
-        int num = ptr[start + i];
-        if (num != 0)
+
+        int num = ptr[start+i];
+        if (num > threshold)
         {
-        printf("Non zero entry as %d, value is %d", (start+i), num);
+        // Only print entries that pass threshold
+        printf("entry at %d has a value is %d\n", (start+ i), num);
+        }
     }
-    return 0;
 #endif
-}
+// no dangling pointers
+mem_arr_free(ptr);
+return 0;
 }
