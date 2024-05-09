@@ -70,6 +70,7 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 enable_testing()
 
+
 #------------------------------------------------------------------------
 # Enable both Assembly and C compilation
 #------------------------------------------------------------------------
@@ -84,6 +85,19 @@ option(RISCV_BOARD OFF)
 
 if(RISCV_BOARD) 
   add_compile_definitions(RISCV_BOARD="1")
+endif()
+
+#------------------------------------------------------------------------
+# Define which pk to use based on processor
+#------------------------------------------------------------------------
+
+if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64")
+    set(PK_EXECUTABLE "pk")
+elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
+    set(PK_EXECUTABLE "pk64")
+else()
+    #message(FATAL_ERROR "Unsupported architecture")
+    set(PK_EXECUTABLE "pk64")
 endif()
 
 #------------------------------------------------------------------------
@@ -162,7 +176,7 @@ foreach(APP_RPATH ${APP_FILES})
   else()
     add_custom_command(
       TARGET run-${APP_BIN} POST_BUILD
-      COMMAND spike pk64 ${APP_BIN}
+      COMMAND spike ${PK_EXECUTABLE} ${APP_BIN}
     )
   endif()
 endforeach(APP_RPATH)
@@ -183,6 +197,6 @@ if(NOT RISCV_BOARD)
     add_executable(${TEST_BIN} EXCLUDE_FROM_ALL ${TEST_PATH})
     target_link_libraries(${TEST_BIN} m SRC_LIBRARY) 
     add_dependencies(check ${TEST_BIN})
-    add_test(NAME ${TEST_BIN} COMMAND spike pk64 ${TEST_BIN})
+    add_test(NAME ${TEST_BIN} COMMAND spike ${PK_EXECUTABLE} ${TEST_BIN})
   endforeach(TEST_RPATH)
 endif()

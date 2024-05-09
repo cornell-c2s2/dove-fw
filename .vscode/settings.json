@@ -4,6 +4,8 @@
         "defs.h": "c",
         "fake.h": "c",
         "src.h": "c",
-        "arith.h": "c"
+        "arith.h": "c",
+        "bird_2.h": "c",
+        "stdio.h": "c"
     }
 }
