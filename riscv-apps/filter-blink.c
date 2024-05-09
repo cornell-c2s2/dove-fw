@@ -20,29 +20,6 @@
 int num_samples = 30;
 int kernel_length = 10;
 
-// puts samples in ptr
-void get_samples(char *ptr, int num_samples, int kernel_length)
-{
-#ifdef RISCV_BOARD
-    // Use Kene's function
-    array_read_spi(ptr,num_samples);
-#else
-    // Get sample from bird files
-
-    // bird_2 has noise
-    for (int i = 0; i < num_samples; i++)
-    {
-        ptr[i] = samples[75000 + i];
-    }
-
-    // bird_1 has no noise
-    for (int i = 0; i < kernel_length; i++)
-    {
-        ptr[num_samples + i] = samples2[100000 + i];
-    }
-#endif
-}
-
 void delay(const int d)
 {
 
@@ -58,7 +35,6 @@ void delay(const int d)
         reg_timer0_update = 1;
     }
 }
-
 
 void blink(bool on)
 {
@@ -80,7 +56,6 @@ void blink(bool on)
         delay(8000000);
     }
 }
-
 
 int main()
 {
@@ -175,15 +150,15 @@ int main()
     for (int i = 0; i < filtered_size; i++)
     {
 
-        int num = ptr[start+i];
+        int num = ptr[start + i];
         if (num > threshold)
         {
-        // Only print entries that pass threshold
-        printf("entry at %d has a value is %d\n", (start+ i), num);
+            // Only print entries that pass threshold
+            printf("entry at %d has a value is %d\n", (start + i), num);
         }
     }
 #endif
-// no dangling pointers
-mem_arr_free(ptr);
-return 0;
+    // no dangling pointers
+    mem_arr_free(ptr);
+    return 0;
 }

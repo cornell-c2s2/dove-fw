@@ -12,6 +12,7 @@ set(SRC_FILES
   utils/bitops.c
   utils/mem_array.c
   utils/src.c
+  utils/SPI_Lib_C2S2.c
 )
 set(TEST_FILES
   tests/test_arith.c
