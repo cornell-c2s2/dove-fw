@@ -19,6 +19,7 @@ set(TEST_FILES
 )
 set(APP_FILES
   riscv-apps/blink.c
+  riscv-apps/filter-blink.c
 )
 
 set(INCLUDE_DIRS
