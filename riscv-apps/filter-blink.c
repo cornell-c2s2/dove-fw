@@ -15,8 +15,8 @@
 #include "stdlib.h"
 #endif
 // define number of samples wanted for data and kernel
-int num_samples = 175;
-int kernel_length = 75;
+int num_samples = 120;
+int kernel_length = 30;
 
 void delay(const int d)
 {
@@ -34,7 +34,7 @@ void delay(const int d)
     }
 }
 
-void blink(bool on)
+void blink(int on)
 {
     if (on)
     {
@@ -70,16 +70,14 @@ int main()
     // Note: unsigned chars goes from 0 to 255, signed goes from -127 to 127
     //  We will used signed chars to get real data from bird_1.h and bird_2.h
 
-    // Use matched filter
-    new_matched_filter(ptr, num_samples, kernel_length);
-    // matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
     int filtered_size = num_samples + kernel_length - 1;
     // Starting index for putting matched filter results
     int start = num_samples + kernel_length;
-
     // If the value passes the threshold then we say a Scrubjay is detected
-    int threshold = 600;
+    int threshold = 0;
+
+   
 #ifdef RISCV_BOARD
     reg_gpio_mode1 = 1;
     reg_gpio_mode0 = 0;
@@ -92,34 +90,35 @@ int main()
     reg_mprj_io_34 = GPIO_MODE_MGMT_STD_OUTPUT;
     reg_mprj_io_33 = GPIO_MODE_MGMT_STD_OUTPUT;
     reg_mprj_io_32 = GPIO_MODE_MGMT_STD_OUTPUT;
-    reg_mprj_io_31 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_30 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_29 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_28 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_27 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_26 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_25 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_24 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_23 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_22 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_21 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_20 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_19 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_18 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_17 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_16 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_15 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_14 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_13 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_12 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_11 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_10 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_9 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_8 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_7 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+    reg_mprj_io_31 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_30 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_29 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_28 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_27 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_26 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_25 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_24 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_23 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_22 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_21 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_20 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_19 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_18 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_17 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_16 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_15 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_14 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_13 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_12 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_11 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_10 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_9 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_8 = GPIO_MODE_MGMT_STD_OUTPUT;
+    reg_mprj_io_7 = GPIO_MODE_MGMT_STD_OUTPUT;
     reg_mprj_io_6 = GPIO_MODE_MGMT_STD_OUTPUT;
+    
     //    reg_mprj_io_6  = 0x1fff;
-    reg_mprj_io_5 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+    reg_mprj_io_5 = GPIO_MODE_MGMT_STD_OUTPUT;
 
     /* Lowest 5 GPIOs need to be set this way in order to	*/
     /* access the housekeeping SPI at run-time.  Do not change	*/
@@ -133,17 +132,31 @@ int main()
     // Initiate the serial transfer
     reg_mprj_xfer = 1;
     while (reg_mprj_xfer == 1)
-        ;
-
+        {};
+    
     // If on board blink
-    for (int i = 0; i < filtered_size; i++)
+    int index = 0;
+
+    reg_gpio_out = 0; // ON
+    reg_mprj_datah = 0x0000003f;
+    // Use matched filter
+    new_matched_filter(ptr, num_samples, kernel_length);
+    reg_gpio_out = 1; // OFF
+    reg_mprj_datah = 0x00000000;
+    for (int i = 0; i < 20; i++)
     {
+        if (i > 0){
+            index = index + 12;
+        }
+        for (int j = 0; j < 12; j++){
+            blink(ptr[start + (index+j)] > threshold);
 
-        blink(ptr[start + i] > threshold);
-
-        delay(8000000);
+            delay(8000000);
+        }
     }
 #else
+        // Use matched filter
+    new_matched_filter(ptr, num_samples, kernel_length);
     // If not on board we print values!
     for (int i = 0; i < filtered_size; i++)
     {

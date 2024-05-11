@@ -27,9 +27,6 @@ int *mem_arr_alloc()
 void get_samples(int *ptr, int num_samples, int kernel_length)
 {
 #ifdef RISCV_BOARD
-    // Use Kene's function
-    // run_spi(ptr, num_samples);
-#else
     // Get sample from bird files
 
     // bird_2 has noise
@@ -42,6 +39,20 @@ void get_samples(int *ptr, int num_samples, int kernel_length)
     for (int i = 0; i < kernel_length; i++)
     {
         ptr[num_samples + i] = samples2[100000 + i];
+    }
+#else
+    // Get sample from bird files
+
+    // bird_2 has noise
+    for (int i = 0; i < num_samples; i++)
+    {
+        ptr[i] = samples2[75000 + i];
+    }
+
+    // bird_1 has no noise
+    for (int i = 0; i < kernel_length; i++)
+    {
+        ptr[num_samples + i] = samples[100000 + i];
     }
 #endif
 }

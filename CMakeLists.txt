@@ -13,10 +13,12 @@ set(SRC_FILES
   utils/mem_array.c
   utils/src.c
   utils/SPI_Lib_C2S2.c
+  utils/gpio.c
 )
 set(TEST_FILES
   tests/test_arith.c
   tests/test_bitops.c
+  tests/test_filter.c
 )
 set(APP_FILES
   riscv-apps/blink.c

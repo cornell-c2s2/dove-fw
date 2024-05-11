@@ -1,7 +1,8 @@
 #include "src.h"
 #include "arith.h"
 #include "stdio.h"
-
+#include "gpio.h"
+#include "defs.h"
 // Preprocessing code
 // void normalize(float *data, size_t num_samples, double targetPeak)
 // {
@@ -96,6 +97,7 @@
 //   return pcmDataFloat;
 // }
 
+
 // Old matched filter
 void matched_filter(char *input_signal, int signal_length, char *filter_kernel, int kernel_length, char *filtered_signal)
 {
@@ -140,6 +142,7 @@ void new_matched_filter(int *filtered_signal,int signal_length, int kernel_lengt
       {
         filtered_signal[start + i] += mul (filtered_signal[i - j], filtered_signal[signal_length + (kernel_length - 1 - j)]);
       }
+
     }
     // printf("Match entry: %d num: %d\n", start+i,filtered_signal[start+i] );
   }
