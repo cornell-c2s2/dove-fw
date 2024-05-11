@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "stdbool.h": "c",
+        "defs.h": "c",
+        "fake.h": "c",
+        "src.h": "c",
+        "arith.h": "c",
+        "csr.h": "c",
+        "spi_lib_c2s2.h": "c"
+    }
+}

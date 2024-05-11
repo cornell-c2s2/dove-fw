@@ -1,5 +1,6 @@
 #include "src.h"
 #include "arith.h"
+#include "stdio.h"
 
 // Preprocessing code
 // void normalize(float *data, size_t num_samples, double targetPeak)
@@ -140,5 +141,6 @@ void new_matched_filter(char *filtered_signal,int signal_length, int kernel_leng
         filtered_signal[start + i] += mul (filtered_signal[i - j], filtered_signal[signal_length + (kernel_length - 1 - j)]);
       }
     }
+    // printf("Match entry: %d num: %d\n", start+i,filtered_signal[start+i] );
   }
 }

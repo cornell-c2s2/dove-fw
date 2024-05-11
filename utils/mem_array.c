@@ -4,9 +4,10 @@
 
 #include "bird_1.h"
 #include "bird_2.h"
-
 #ifndef RISCV_BOARD
 #include <stdlib.h>
+#else
+#include "SPI_Lib_C2S2.h"
 #endif
 
 char *mem_arr_alloc()
@@ -27,7 +28,7 @@ void get_samples(char *ptr, int num_samples, int kernel_length)
 {
 #ifdef RISCV_BOARD
     // Use Kene's function
-    // get_data(ptr,num_samples)
+    // run_spi(ptr, num_samples);
 #else
     // Get sample from bird files
 
