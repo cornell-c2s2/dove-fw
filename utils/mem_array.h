@@ -10,9 +10,9 @@
 // Allocating and freeing the memory array
 //------------------------------------------------------------------------
 
-char* mem_arr_alloc();
-void  mem_arr_free( char* ptr );
-void get_samples(char* ptr, int num_samples, int kernel_length);
+int* mem_arr_alloc();
+void  mem_arr_free( int* ptr );
+void get_samples(int* ptr, int num_samples, int kernel_length);
 
 #endif // MEM_ARRAY_H
 

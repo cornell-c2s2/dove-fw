@@ -10,21 +10,21 @@
 #include "SPI_Lib_C2S2.h"
 #endif
 
-char *mem_arr_alloc()
+int *mem_arr_alloc()
 {
 
     // If we're on the board, use SRAM
 #ifdef RISCV_BOARD
-    return (char *)0x01000000;
+    return (int *)0x01000000;
 
     // Otherwise, use malloc
 #else
-    return (char *)malloc(2048);
+    return (int *)malloc(2048);
 #endif
 }
 
 // puts samples in ptr
-void get_samples(char *ptr, int num_samples, int kernel_length)
+void get_samples(int *ptr, int num_samples, int kernel_length)
 {
 #ifdef RISCV_BOARD
     // Use Kene's function
@@ -46,7 +46,7 @@ void get_samples(char *ptr, int num_samples, int kernel_length)
 #endif
 }
 
-void mem_arr_free(char *ptr)
+void mem_arr_free(int *ptr)
 {
 
     // If we're on the board, no need to do anything

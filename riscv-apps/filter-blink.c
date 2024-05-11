@@ -15,8 +15,8 @@
 #include "stdlib.h"
 #endif
 // define number of samples wanted for data and kernel
-int num_samples = 30;
-int kernel_length = 10;
+int num_samples = 175;
+int kernel_length = 75;
 
 void delay(const int d)
 {
@@ -62,7 +62,7 @@ int main()
     // Entries num_samples to kernel_length - 1 contain the template signal to match with
     // Entries kernel_length to num_samples + kernel_length - 1 contain the result of the matched filter
     // It is the duty of the caller to make sure there is enough space in the ptr.
-    char *ptr = mem_arr_alloc();
+    int *ptr = mem_arr_alloc();
 
     // put samples in ptr
     get_samples(ptr, num_samples, kernel_length);
@@ -74,12 +74,12 @@ int main()
     new_matched_filter(ptr, num_samples, kernel_length);
     // matched_filter(fake_samples, fake_size, kernel_samples, kernel_size, filtered);
 
-    char filtered_size = num_samples + kernel_length - 1;
+    int filtered_size = num_samples + kernel_length - 1;
     // Starting index for putting matched filter results
     int start = num_samples + kernel_length;
 
     // If the value passes the threshold then we say a Scrubjay is detected
-    int threshold = 100;
+    int threshold = 600;
 #ifdef RISCV_BOARD
     reg_gpio_mode1 = 1;
     reg_gpio_mode0 = 0;
