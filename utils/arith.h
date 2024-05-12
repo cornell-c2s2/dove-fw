@@ -6,13 +6,15 @@
 #ifndef ARITH_H
 #define ARITH_H
 
+#include <stdint.h>
+
 //------------------------------------------------------------------------
 // Multiplication
 //------------------------------------------------------------------------
 // O( log( min( src1, src2 ) ) )
 
-int          mul ( int          src1, int          src2 );
-unsigned int mulu( unsigned int src1, unsigned int src2 );
+int32_t  mul ( int32_t  src1, int32_t  src2 );
+uint32_t mulu( uint32_t src1, uint32_t src2 );
 
 //------------------------------------------------------------------------
 // Division
@@ -22,8 +24,8 @@ unsigned int mulu( unsigned int src1, unsigned int src2 );
 //
 // O( log( max( src1, src2 ) ) )
 
-int          div ( int          numerator, int          denominator );
-unsigned int divu( unsigned int numerator, unsigned int denominator );
+int32_t  div ( int32_t  numerator, int32_t  denominator );
+uint32_t divu( uint32_t numerator, uint32_t denominator );
 
 //------------------------------------------------------------------------
 // Remainder
@@ -33,7 +35,7 @@ unsigned int divu( unsigned int numerator, unsigned int denominator );
 //
 // O( log( max( src1, src2 ) ) )
 
-int          rem ( int          numerator, int          denominator );
-unsigned int remu( unsigned int numerator, unsigned int denominator );
+int32_t  rem ( int32_t  numerator, int32_t  denominator );
+uint32_t remu( uint32_t numerator, uint32_t denominator );
 
 #endif // ARITH_H

@@ -4,7 +4,6 @@
 // Blinking code to visualize the matched filter
 
 #include "defs.h"
-#include "src.h"
 #include "mem_array.h"
 #include "csr.h"
 
@@ -16,31 +15,37 @@
 #include "stdlib.h"
 #endif
 
-// Define number of samples wanted for data and kernel
-int num_samples = 50;
-int kernel_length = 30;
+void delay(const int d)
+{
+
+    /* Configure timer for a single-shot countdown */
+    reg_timer0_config = 0;
+    reg_timer0_data = d;
+    reg_timer0_config = 1;
+
+    // Loop, waiting for value to reach zero
+    reg_timer0_update = 1; // latch current value
+    while (reg_timer0_value > 0)
+    {
+        reg_timer0_update = 1;
+    }
+}
 
 int main()
 {
-    // Allocate memory, about 2kb
-    // Entries 0 to num_samples - 1 contain data with noise (AKA actual data)
-    // Entries num_samples to kernel_length - 1 contain the template signal to match with
-    // Entries kernel_length to num_samples + kernel_length - 1 contain the result of the matched filter
-    // It is the duty of the caller to make sure there is enough space in the ptr.
-    int32_t *ptr = mem_arr_alloc();
+    // Allocate the memory
+    int *ptr = mem_arr_alloc();
 
-    // put samples in ptr
-    get_samples(ptr, num_samples, kernel_length);
-
-    // Note: unsigned chars goes from 0 to 255, signed goes from -127 to 127
-    //  We will used signed chars to get real data from bird_1.h and bird_2.h
-
-
-    int filtered_size = num_samples + kernel_length - 1;
-    // Starting index for putting matched filter results
-    int start = num_samples + kernel_length;
-    // If the value passes the threshold then we say a Scrubjay is detected
-    int32_t threshold = 0;
+    // Initialize memory
+    int init_high = 1;
+    int base_index = 0;
+    for( int i = 0; i < 20; i++ ){
+        for( int j = 0; j < 4; j++ ){
+            ptr[base_index + j] = init_high;
+        }
+        base_index += 4;
+        init_high = !init_high;
+    }
 
 #ifdef RISCV_BOARD
     // Configure GPIO's
@@ -97,57 +102,37 @@ int main()
     reg_mprj_xfer = 1;
     while (reg_mprj_xfer == 1)
         {};
+#endif
     
-    // If on the board, indicate calculations have started
-    reg_gpio_out = 0; // ON
+    base_index = 0;
+    volatile int over_threshold;
+    for (int i = 0; i < 20; i++)
+    {
+        // Keep track of whether we've exceeded the threshold
+        over_threshold = 0;
 
-    // Set all GPIO's to low
-    for( int i = 0; i < 20; i++ ){
-        gpio_low( i + 6 );
-    }
-#endif
-
-    // Run the filter
-    new_matched_filter(ptr, num_samples, kernel_length);
-
+        for (int j = 0; j < 4; j++){
+            if(ptr[(base_index + j)] > 0){
+                over_threshold = 1;
+            }
+        }
 #ifdef RISCV_BOARD
-    reg_gpio_out = 1; // OFF
-    int base_index = 0;
-    for (int i = 0; i < 20; i++)
-    {
-        // Keep track of whether we've exceeded the threshold
-        int over_threshold = 0;
-
-        for (int j = 0; j < 5; j++){
-            if( start + (base_index + j) > 170 ){}
-            else if(ptr[start + (base_index + j)] > threshold){
-                over_threshold = 1;
-            }
-        }
         gpio_set( i + 6, over_threshold );
-        base_index += 5;
-    }
-
-    // Indicate that calculations are finished
-    reg_gpio_out = 1; // OFF
-#else
-    // If not on board we print values!
-    int base_index = 0;
-    for (int i = 0; i < 20; i++)
-    {
-        // Keep track of whether we've exceeded the threshold
-        int over_threshold = 0;
-
-        for (int j = 0; j < 5; j++){
-            if( start + (base_index + j) > 170 ){}
-            else if(ptr[start + (base_index + j)] > threshold){
-                over_threshold = 1;
-            }
+        if( over_threshold ){
+            reg_gpio_out = 0; // ON
+        } else {
+            reg_gpio_out = 1; // OFF
         }
-        printf( "GPIO %d would be %d\n", (i + 6), over_threshold );
-        base_index += 5;
-    }
+        delay( 500000 );
+#else
+        printf( "over_threshold is %d in region %d\n", over_threshold, i );
+        if( over_threshold ){
+            printf( " - It's high!\n" );
+        }
 #endif
+        base_index += 4;
+    }
+
     // no dangling pointers
     mem_arr_free(ptr);
     return 0;

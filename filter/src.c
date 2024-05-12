@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "gpio.h"
 #include "defs.h"
+
 // Preprocessing code
 // void normalize(float *data, size_t num_samples, double targetPeak)
 // {
@@ -126,7 +127,7 @@ void matched_filter(char *input_signal, int signal_length, char *filter_kernel, 
 // Entries num_samples to kernel_length - 1 contain the template signal to match with
 // Entries kernel_length to num_samples + kernel_length - 2 contain the result of the matched filter
 // It is the duty of the caller to make sure there is enough space in the ptr. 
-void new_matched_filter(int *filtered_signal,int signal_length, int kernel_length)
+void new_matched_filter(int32_t* filtered_signal,int signal_length, int kernel_length)
 {
   // Get length of the output signal: N + M - 1
   int filtered_length = signal_length + kernel_length - 1;
@@ -142,8 +143,6 @@ void new_matched_filter(int *filtered_signal,int signal_length, int kernel_lengt
       {
         filtered_signal[start + i] += mul (filtered_signal[i - j], filtered_signal[signal_length + (kernel_length - 1 - j)]);
       }
-
     }
-    // printf("Match entry: %d num: %d\n", start+i,filtered_signal[start+i] );
   }
 }

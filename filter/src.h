@@ -3,7 +3,7 @@
 
 // #include <stddef.h>
 // #include <stdio.h>
-// #include <stdint.h>
+#include <stdint.h>
 // #include <math.h>
 // #include <stdlib.h>
 // #include <sndfile.h>
@@ -42,6 +42,6 @@
 /// @param kernel_length The length of the filter kernel
 void matched_filter(char *input_signal, int signal_length, char *filter_kernel, int kernel_length, char *filtered_signal);
 
-void new_matched_filter(int *filtered_signal,int signal_length, int kernel_length);
+void new_matched_filter(int32_t *filtered_signal,int signal_length, int kernel_length);
 
 #endif
