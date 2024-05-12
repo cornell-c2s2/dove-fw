@@ -20,6 +20,7 @@ int32_t *mem_arr_alloc()
 
     // If we're on the board, use pre-allocated array
 #ifdef RISCV_BOARD
+    // return &(reg_rw_block1);
     return mem_arr;
 
     // Otherwise, use malloc

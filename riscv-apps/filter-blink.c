@@ -111,7 +111,7 @@ int main()
     new_matched_filter(ptr, num_samples, kernel_length);
 
 #ifdef RISCV_BOARD
-    reg_gpio_out = 1; // OFF
+    reg_mprj_datal = 0;
     int base_index = 0;
     for (int i = 0; i < 20; i++)
     {
