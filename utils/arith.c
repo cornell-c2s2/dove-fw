@@ -5,12 +5,13 @@
 
 #include "arith.h"
 #include "bitops.h"
+#include <stdint.h>
 
 //------------------------------------------------------------------------
 // Multiplication
 //------------------------------------------------------------------------
 
-int mul( int src1, int src2 ) {
+int32_t mul( int32_t src1, int32_t src2 ) {
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Invert operands to make positive, if necessary
@@ -25,8 +26,8 @@ int mul( int src1, int src2 ) {
     // Iterate over smaller positive operand (opb) for efficiency
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    int opa;
-    int opb;
+    int32_t opa;
+    int32_t opb;
 
     if( src1 < 0 ) {
         opa = src1;
@@ -42,7 +43,7 @@ int mul( int src1, int src2 ) {
         opb = src2;
     }
 
-    int acc = 0;
+    int32_t acc = 0;
 
     while( opb > 0 ){
         if( get_bit( opb, 0 ) ) {
@@ -56,14 +57,14 @@ int mul( int src1, int src2 ) {
     return acc;
 }
 
-unsigned int mulu( unsigned int src1, unsigned int src2 ) {
+uint32_t mulu( uint32_t src1, uint32_t src2 ) {
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Iterate over smaller positive operand (opb) for efficiency
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    unsigned int opa;
-    unsigned int opb;
+    uint32_t opa;
+    uint32_t opb;
 
     if( src1 < src2 ) {
         opa = src2;
@@ -73,7 +74,7 @@ unsigned int mulu( unsigned int src1, unsigned int src2 ) {
         opb = src2;
     }
 
-    unsigned int acc = 0;
+    uint32_t acc = 0;
 
     while( opb > 0 ){
         if( get_bit( opb, 0 ) ) {
@@ -91,14 +92,14 @@ unsigned int mulu( unsigned int src1, unsigned int src2 ) {
 // Division
 //------------------------------------------------------------------------
 
-int div( int numerator, int denominator ) {
+int32_t div( int32_t numerator, int32_t denominator ) {
 
     if( denominator == 0 ){ return 0; }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Make sure that the result is the correct sign
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    int flip_result = 0;
+    int32_t flip_result = 0;
 
     if( numerator < 0 ){
         numerator = -numerator;
@@ -116,16 +117,16 @@ int div( int numerator, int denominator ) {
     // This is similar to iterative division by subtraction, but uses
     // shifting to get logarithmic complexity
 
-    int opa = numerator;
-    int opb = denominator;
-    int shift_amt = 1;
+    int32_t opa = numerator;
+    int32_t opb = denominator;
+    int32_t shift_amt = 1;
 
     while( ( opb << 1 ) <= opa ){
         opb       = ( opb       << 1 );
         shift_amt = ( shift_amt << 1 );
     }
 
-    int acc = 0;
+    int32_t acc = 0;
     while( ( opb > 0 ) & ( shift_amt > 0 ) ){
         if( opb <= opa ){
             acc += shift_amt;
@@ -139,7 +140,7 @@ int div( int numerator, int denominator ) {
     return ( flip_result ) ? -acc : acc;
 }
 
-unsigned int divu( unsigned int numerator, unsigned int denominator ) {
+uint32_t divu( uint32_t numerator, uint32_t denominator ) {
 
     if( denominator == 0 ){ return 0; }
 
@@ -147,16 +148,16 @@ unsigned int divu( unsigned int numerator, unsigned int denominator ) {
     // Perform iterative division by shifting
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    unsigned int opa = numerator;
-    unsigned int opb = denominator;
-    int shift_amt = 1;
+    uint32_t opa = numerator;
+    uint32_t opb = denominator;
+    int32_t shift_amt = 1;
 
     while( ( opb << 1 ) <= opa ){
         opb       = ( opb       << 1 );
         shift_amt = ( shift_amt << 1 );
     }
 
-    unsigned int acc = 0;
+    uint32_t acc = 0;
     while( ( opb > 0 ) & ( shift_amt > 0 ) ){
         if( opb <= opa ){
             acc += shift_amt;
@@ -174,13 +175,13 @@ unsigned int divu( unsigned int numerator, unsigned int denominator ) {
 // Remainder
 //------------------------------------------------------------------------
 
-int rem( int numerator, int denominator ) {
+int32_t rem( int32_t numerator, int32_t denominator ) {
     if( denominator == 0 ){ return numerator; }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Make sure that the result is the correct sign
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    int flip_result = 0;
+    int32_t flip_result = 0;
 
     if( numerator < 0 ){
         numerator = -numerator;
@@ -196,9 +197,9 @@ int rem( int numerator, int denominator ) {
     // Perform iterative division by shifting
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    int opa = numerator;
-    int opb = denominator;
-    int shift_amt = 1;
+    int32_t opa = numerator;
+    int32_t opb = denominator;
+    int32_t shift_amt = 1;
 
     while( ( opb << 1 ) <= opa ){
         opb       = ( opb       << 1 );
@@ -217,16 +218,16 @@ int rem( int numerator, int denominator ) {
     return ( flip_result ) ? -opa : opa;
 }
 
-unsigned int remu( unsigned int numerator, unsigned int denominator ) {
+uint32_t remu( uint32_t numerator, uint32_t denominator ) {
     if( denominator == 0 ){ return numerator; }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Perform iterative division by shifting
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    unsigned int opa = numerator;
-    unsigned int opb = denominator;
-    int shift_amt = 1;
+    uint32_t opa = numerator;
+    uint32_t opb = denominator;
+    int32_t shift_amt = 1;
 
     while( ( opb << 1 ) <= opa ){
         opb       = ( opb       << 1 );

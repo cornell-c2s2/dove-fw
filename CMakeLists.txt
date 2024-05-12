@@ -11,20 +11,25 @@ set(SRC_FILES
   utils/arith.c
   utils/bitops.c
   utils/mem_array.c
-  utils/src.c
+  filter/src.c
   utils/SPI_Lib_C2S2.c
+  utils/gpio.c
 )
 set(TEST_FILES
   tests/test_arith.c
   tests/test_bitops.c
+  tests/test_filter.c
 )
 set(APP_FILES
   riscv-apps/blink.c
+  riscv-apps/iterate.c
+  riscv-apps/mem-test.c
   riscv-apps/filter-blink.c
 )
 
 set(INCLUDE_DIRS
   utils
+  filter
   board-utils
 )
 
@@ -107,10 +112,10 @@ endif()
 #------------------------------------------------------------------------
 
 if(RISCV_BOARD)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds,--strip-debug -ffreestanding -nostdlib")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall -mabi=ilp32 -march=rv32i_zicsr -D__vexriscv__ -Wl,-Bstatic,-T,${CMAKE_CURRENT_SOURCE_DIR}/board-utils/sections.lds,--strip-debug -ffreestanding -nostdlib")
   set(SRC_FILES ${SRC_FILES} board-utils/crt0_vex.S board-utils/isr.c )
 else()
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" CACHE STRING "Spike needs static..." FORCE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -Wall -static" CACHE STRING "Spike needs static..." FORCE)
 endif()
 
 SET(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
