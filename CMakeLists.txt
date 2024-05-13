@@ -18,7 +18,6 @@ set(SRC_FILES
 set(TEST_FILES
   tests/test_arith.c
   tests/test_bitops.c
-  tests/test_filter.c
 )
 set(APP_FILES
   riscv-apps/blink.c

@@ -73,7 +73,7 @@ int main()
     reg_mprj_io_18 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
     reg_mprj_io_17 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
     reg_mprj_io_16 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
-    reg_mprj_io_15 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
+    reg_mprj_io_15 = GPIO_MODE_MGMT_STD_OUTPUT;
     reg_mprj_io_14 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
     reg_mprj_io_13 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
     reg_mprj_io_12 = GPIO_MODE_MGMT_STD_INPUT_NOPULL;
@@ -96,7 +96,8 @@ int main()
 
     // Initiate the serial transfer
     reg_mprj_xfer = 1;
-    while (reg_mprj_xfer == 1);
+    while (reg_mprj_xfer == 1)
+        ;
     bool should_blink = true;
 
     for (int i = 0; i < 10; i++)
@@ -115,7 +116,7 @@ int main()
 {
     for (int i = 0; i < 10; i++)
     {
-        printf( "Count: %d\n", i );
+        printf("Count: %d\n", i);
     }
     return 0;
 }
