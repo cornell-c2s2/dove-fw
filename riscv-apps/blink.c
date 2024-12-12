@@ -6,6 +6,7 @@
 #ifdef RISCV_BOARD // On the board
 
 #include "defs.h"
+#include "csr.h"
 
 void delay(const int d)
 {

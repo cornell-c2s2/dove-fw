@@ -38,4 +38,6 @@ uint32_t divu( uint32_t numerator, uint32_t denominator );
 int32_t  rem ( int32_t  numerator, int32_t  denominator );
 uint32_t remu( uint32_t numerator, uint32_t denominator );
 
+int16_t rem_16( int16_t numerator, int16_t denominator );
+
 #endif // ARITH_H

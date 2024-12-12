@@ -184,6 +184,7 @@ print("JEDEC = {}".format(binascii.hexlify(jedec)))
 
 if jedec[0:1] != bytes.fromhex('ef'):
 # if jedec[0:1] != bytes.fromhex('e6'):
+    print("JEDEC = {}".format(binascii.hexlify(jedec)))
     print("Winbond SRAM not found")
     sys.exit()
 

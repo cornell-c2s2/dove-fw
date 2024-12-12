@@ -6,6 +6,14 @@
         "src.h": "c",
         "arith.h": "c",
         "csr.h": "c",
-        "spi_lib_c2s2.h": "c"
+        "spi_lib_c2s2.h": "c",
+        "cstddef": "c",
+        "stdint.h": "c",
+        "mem_array.h": "c",
+        "imu-sync.h": "c",
+        "gpio.h": "c",
+        "ring_buffer.h": "c",
+        "bitops.h": "c",
+        "stdio.h": "c"
     }
 }
