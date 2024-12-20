@@ -4,6 +4,7 @@
 #include "arith.h"
 #include "stdio.h"
 
+// elias code
 void delay(const int d)
 {
 
@@ -108,7 +109,8 @@ void chararray_to_int(chararray_t array, uart_int* uart_num){
 
   // edit reference
   uart_num->num = acc;
-  uart_num->size = array.size;
+  // has extra index
+  uart_num->size = array.size - 1; //HEREEEEEEEEEEEEEEEEEE
 }
 
 void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
@@ -249,45 +251,105 @@ void main()
       // UART_sendLine(arr);
 
       // Ring Buffer Test:
-      char memory[] = {'-','6','9','1'};
-      chararray_t value = {memory, 4};
+      // char memory[] = {'-','6','9','1'};
+      // chararray_t value = {memory, 4};
+      // uart_int uart_num;
+
+      // // num 2
+      // char memory2[] = {'1','0','9','1','5'};
+      // chararray_t value2 = {memory2, 5};
+      // uart_int uart_num2;
+
+      // // Convert and put into buffer
+      // chararray_to_int(value, &uart_num);
+      // chararray_to_int(value2, &uart_num2);
+      // ring_buffer_put(&ring_buffer, uart_num);
+      // ring_buffer_put(&ring_buffer, uart_num2);
+
+      // // Immediately take out:
+      // uart_num = ring_buffer_get(&ring_buffer);
+      // char mem[uart_num.size];
+      // chararray_t arr;
+      // int_to_chararray(&uart_num,&arr, mem);
+      // UART_sendLine(arr);
+
+      // // Take out second num
+      // uart_num2 = ring_buffer_get(&ring_buffer);
+      // char mem2[uart_num2.size];
+      // chararray_t arr2;
+      // int_to_chararray(&uart_num2,&arr2, mem2);
+      // UART_sendLine(arr2);
+
+      // PROBLEMS HERE:
+
+      // Get first number
+      char arr[6];
+      chararray_t char_arr = UART_readLine(arr);
+
       uart_int uart_num;
+      chararray_to_int(char_arr, &uart_num);
+      UART_sendChar('\n');
 
-      // num 2
-      char memory2[] = {'1','0','9','1','5'};
-      chararray_t value2 = {memory2, 5};
+      // Get second number
+      chararray_t char_arr2 = UART_readLine(arr);
+
       uart_int uart_num2;
+      chararray_to_int(char_arr2, &uart_num2);
 
-      // Convert and put into buffer
-      chararray_to_int(value, &uart_num);
-      chararray_to_int(value2, &uart_num2);
+      // Put both nums in RingBuffer
       ring_buffer_put(&ring_buffer, uart_num);
       ring_buffer_put(&ring_buffer, uart_num2);
 
-      // Immediately take out:
-      uart_num = ring_buffer_get(&ring_buffer);
-      char mem[uart_num.size];
-      chararray_t arr;
-      int_to_chararray(&uart_num,&arr, mem);
-      UART_sendLine(arr);
+      // Get first and second number
+      uart_int returned_num = ring_buffer_get(&ring_buffer);
+      uart_int returned_num2 = ring_buffer_get(&ring_buffer);
 
-      // Take out second num
-      uart_num2 = ring_buffer_get(&ring_buffer);
-      char mem2[uart_num2.size];
-      chararray_t arr2;
-      int_to_chararray(&uart_num2,&arr2, mem2);
-      UART_sendLine(arr2);
+      // Convert to char arrays
+      char num_arr[returned_num.size];
+      char num_arr2[returned_num2.size];
+
+      chararray_t returned_char;
+      chararray_t returned_char2;
+
+      int_to_chararray(&returned_num, &returned_char, num_arr);
+      int_to_chararray(&returned_num2, &returned_char2, num_arr2);
+
+      // UART_sendLine(returned_char);
+      UART_sendLine(returned_char2);
 
 
 
-      // Put num in ring buffer
-      // char arr[6];
+
+
+
+      // chararray_t char_arr = UART_readLine(arr);
+
+      // uart_int uart_num;
+      // chararray_to_int(char_arr, &uart_num);
+      
+      // ring_buffer_put(&ring_buffer, uart_num);
+
+      // chararray_t char_arr2;
+      // arr[uart_num.size-1];
+      // ring_buffer_put(&ring_buffer, uart_num);
+      // int_to_chararray(&uart_num, &char_arr2, arr);
+
+      // UART_sendLine(char_arr2);
+
+
+
       // chararray_t received = UART_readLine(arr); // Read input as a chararray
+      // uart_int num;
 
       // // Convert to uart_int
       // uart_int uart_num;
       // chararray_to_int(received, &uart_num);
 
+
+      // // Allocate a sufficiently large buffer for the output
+      // char converted[6]; // Buffer size should accommodate potential sign and digits
+      // chararray_t result;
+      
       // // Allocate a sufficiently large buffer for the output
       // char converted[6]; // Buffer size should accommodate potential sign and digits
       // chararray_t result;
