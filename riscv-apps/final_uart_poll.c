@@ -1,3 +1,8 @@
+//========================================================================
+// final_uart_poll.c
+//========================================================================
+// Send IMU data from Particle Board to RISC-V and send data back
+
 #include "defs.h"
 #include "csr.h"
 #include "ring_buffer.h"
@@ -41,45 +46,71 @@ void blink(int on)
   }
 }
 
+// Struct associating character array and it's size
 typedef struct {
   char* data;
   uint8_t size;
 } chararray_t;
 
+// UART LIBRARY STUFF
 
-// UART LIBRARY STUFF; should mention by default we pop in documentation
-void UART_popChar(){
+/**
+ * Pop the first ASCII symbol of the UART received queue
+ * 
+ * UART_readChar() function would keeping reading the same symbol unless this function is called
+ */
+void UART_popChar()
+{
   uart_ev_pending_write(0x2);
   return;
 }
 
-char UART_readChar(){
+/**
+ * While receiving ASCII symbol, return it
+ * 
+ * Return the first ASCII symbol of the UART received queue
+ * 
+ * RX mode must be enabled
+ */
+char UART_readChar()
+{
   while(uart_rxempty_read() == 1);
   UART_popChar();
   return reg_uart_data;
 }
 
-void UART_sendChar(char character){
+/**
+ * Send ASCII char through UART
+ * 
+ * TX mode must be enabled
+ */
+void UART_sendChar(char character)
+{
   while(uart_txfull_read() == 1);
-    reg_uart_data = character;
-  // Mention delay in documentations
-  // delay(1000000);
+  reg_uart_data = character;
 }
 
-chararray_t UART_readLine(char* received_array){
+/**
+ * Read full line msg and return it
+ */
+chararray_t UART_readLine(char* received_array)
+{
   char received_char;
   int count = 0;
-  while ((received_char = UART_readChar()) != '\n'){
+  while ((received_char = UART_readChar()) != '\n') {
     received_array[count++] = received_char;
   }
-  // received_array[count++] = received_char;
 
   chararray_t received = {received_array, count};
   return received;
 }
 
-void UART_sendLine(chararray_t chararray){
-  for(int i = 0; i < chararray.size; i++) {  // hard code 3 OK
+/**
+ * Send a full line message through UART
+ */
+void UART_sendLine(chararray_t chararray)
+{
+  for(int i = 0; i < chararray.size; i++) { 
     UART_sendChar(chararray.data[i]);
   }
 
@@ -87,8 +118,11 @@ void UART_sendLine(chararray_t chararray){
   UART_sendChar('\n');
 }
 
-void chararray_to_int(chararray_t array, uart_int* uart_num){
-
+/**
+ * Convert a character array to an integer
+ */
+void chararray_to_int(chararray_t array, uart_int* uart_num)
+{
   int16_t acc = 0;
   
   bool neg = (array.data[0] == '-');
@@ -96,8 +130,8 @@ void chararray_to_int(chararray_t array, uart_int* uart_num){
   // start at 1st index if negative else 0th
   int count = neg ? 1 : 0;
 
-  for (int i = count; i < array.size; i++){
-    // mult old values by 10 to get new vals
+  for (int i = count; i < array.size; i++) {
+    // mul old values by 10 to get new vals
     acc = mul(acc,10);
     acc += array.data[i] - '0';
   }
@@ -111,7 +145,11 @@ void chararray_to_int(chararray_t array, uart_int* uart_num){
   uart_num->size = array.size;
 }
 
-void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
+/**
+ * Convert an integer to a character array
+ */
+void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) 
+{
   int num = uart_num->num; // Preserve original value
   bool neg = num < 0;
 
@@ -140,7 +178,6 @@ void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
   ret->size = index;
 }
 
-
 // void send_ring_buffer(RingBuffer ring_buffer){
 //   int count = 0;
 //   // char line = {'D','u','m','p','i','n','g', ' ', 'b','u','f','f','e','r'};
@@ -160,7 +197,6 @@ void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
 //     count += 1;
 //   }
 // }
-
 
 void main()
 {
@@ -223,6 +259,8 @@ void main()
   reg_uart_enable = 1;
   reg_mprj_datah = 0;
   reg_mprj_datal = 0;
+  
+  // Initialize ring buffer
   RingBuffer ring_buffer = create_ring(156);
   
   while(1)
@@ -277,8 +315,6 @@ void main()
       chararray_t arr2;
       int_to_chararray(&uart_num2,&arr2, mem2);
       UART_sendLine(arr2);
-
-
 
       // Put num in ring buffer
       // char arr[6];
