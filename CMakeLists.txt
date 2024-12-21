@@ -14,6 +14,7 @@ set(SRC_FILES
   filter/src.c
   utils/SPI_Lib_C2S2.c
   utils/gpio.c
+  utils/ring_buffer.c
 )
 set(TEST_FILES
   tests/test_arith.c
@@ -25,6 +26,7 @@ set(APP_FILES
   riscv-apps/mem-test.c
   riscv-apps/filter-blink.c
   riscv-apps/performance.c
+  riscv-apps/uart_poll.c
 )
 
 set(INCLUDE_DIRS

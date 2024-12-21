@@ -218,6 +218,50 @@ int32_t rem( int32_t numerator, int32_t denominator ) {
     return ( flip_result ) ? -opa : opa;
 }
 
+
+int16_t rem_16( int16_t numerator, int16_t denominator ) {
+    if( denominator == 0 ){ return numerator; }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Make sure that the result is the correct sign
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    int16_t flip_result = 0;
+
+    if( numerator < 0 ){
+        numerator = -numerator;
+        flip_result = !flip_result;
+    }
+
+    if( denominator < 0 ){
+        denominator = -denominator;
+        flip_result = !flip_result;
+    }
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Perform iterative division by shifting
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    int16_t opa = numerator;
+    int16_t opb = denominator;
+    int16_t shift_amt = 1;
+
+    while( ( opb << 1 ) <= opa ){
+        opb       = ( opb       << 1 );
+        shift_amt = ( shift_amt << 1 );
+    }
+
+    while( ( opb > 0 ) & ( shift_amt > 0 ) ){
+        if( opb <= opa ){
+            opa -= opb;
+        }
+
+        opb       = ( opb       >> 1 );
+        shift_amt = ( shift_amt >> 1 );
+    }
+
+    return ( flip_result ) ? -opa : opa;
+}
+
 uint32_t remu( uint32_t numerator, uint32_t denominator ) {
     if( denominator == 0 ){ return numerator; }
 
