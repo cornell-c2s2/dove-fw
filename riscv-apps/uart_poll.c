@@ -60,12 +60,23 @@ char UART_readChar(){
   return reg_uart_data;
 }
 
+int16_t UART_readInt(){
+  while(uart_rxempty_read() == 1);
+  UART_popChar();
+  return reg_uart_data;
+}
+
 void UART_sendChar(char character){
   while(uart_txfull_read() == 1);
     reg_uart_data = character;
-  // Mention delay in documentations
-  // delay(1000000);
 }
+
+void UART_sendInt(int16_t n){
+  while(uart_txfull_read() == 1);
+  reg_uart_data = n;
+  // UART_sendChar('\n');
+}
+
 
 chararray_t UART_readLine(char* received_array){
   char received_char;
@@ -230,8 +241,13 @@ void main()
   while(1)
   {
       // BASIC TEST:
-      char test[6];
-      UART_sendLine(UART_readLine(test));
+      // char test[6];
+      // UART_sendLine(UART_readLine(test));
+
+      //  Basic INT test
+      int16_t num = UART_readInt();
+      // CANNOT DO ADDITION FIND OUT WHY s
+      UART_sendInt(num);
 
       // INT TO CHAR TEST:
       // uart_int uart_num = {9254, 4};
