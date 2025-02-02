@@ -230,8 +230,8 @@ void main()
   while(1)
   {
       // BASIC TEST:
-      // char test[6];
-      // UART_sendLine(UART_readLine(test));
+      char test[6];
+      UART_sendLine(UART_readLine(test));
 
       // INT TO CHAR TEST:
       // uart_int uart_num = {9254, 4};
@@ -283,39 +283,39 @@ void main()
       // PROBLEMS HERE:
 
       // Get first number
-      char arr[6];
-      chararray_t char_arr = UART_readLine(arr);
+      // char arr[6];
+      // chararray_t char_arr = UART_readLine(arr);
 
-      uart_int uart_num;
-      chararray_to_int(char_arr, &uart_num);
-      UART_sendChar('\n');
+      // uart_int uart_num;
+      // chararray_to_int(char_arr, &uart_num);
+      // UART_sendChar('\n');
 
-      // Get second number
-      chararray_t char_arr2 = UART_readLine(arr);
+      // // Get second number
+      // chararray_t char_arr2 = UART_readLine(arr);
 
-      uart_int uart_num2;
-      chararray_to_int(char_arr2, &uart_num2);
+      // uart_int uart_num2;
+      // chararray_to_int(char_arr2, &uart_num2);
 
-      // Put both nums in RingBuffer
-      ring_buffer_put(&ring_buffer, uart_num);
-      ring_buffer_put(&ring_buffer, uart_num2);
+      // // Put both nums in RingBuffer
+      // ring_buffer_put(&ring_buffer, uart_num);
+      // ring_buffer_put(&ring_buffer, uart_num2);
 
-      // Get first and second number
-      uart_int returned_num = ring_buffer_get(&ring_buffer);
-      uart_int returned_num2 = ring_buffer_get(&ring_buffer);
+      // // Get first and second number
+      // uart_int returned_num = ring_buffer_get(&ring_buffer);
+      // uart_int returned_num2 = ring_buffer_get(&ring_buffer);
 
-      // Convert to char arrays
-      char num_arr[returned_num.size];
-      char num_arr2[returned_num2.size];
+      // // Convert to char arrays
+      // char num_arr[returned_num.size];
+      // char num_arr2[returned_num2.size];
 
-      chararray_t returned_char;
-      chararray_t returned_char2;
+      // chararray_t returned_char;
+      // chararray_t returned_char2;
 
-      int_to_chararray(&returned_num, &returned_char, num_arr);
-      int_to_chararray(&returned_num2, &returned_char2, num_arr2);
+      // int_to_chararray(&returned_num, &returned_char, num_arr);
+      // int_to_chararray(&returned_num2, &returned_char2, num_arr2);
 
-      // UART_sendLine(returned_char);
-      UART_sendLine(returned_char2);
+      // // UART_sendLine(returned_char);
+      // UART_sendLine(returned_char2);
 
 
 
