@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "csr.h"
 #include "ring_buffer.h"
+#include "int_ring_buffer.h"
 #include "arith.h"
 #include "stdio.h"
 
@@ -42,46 +43,56 @@ void blink(int on)
   }
 }
 
-typedef struct {
-  char* data;
+typedef struct
+{
+  char *data;
   uint8_t size;
 } chararray_t;
 
-
 // UART LIBRARY STUFF; should mention by default we pop in documentation
-void UART_popChar(){
+void UART_popChar()
+{
   uart_ev_pending_write(0x2);
   return;
 }
 
-char UART_readChar(){
-  while(uart_rxempty_read() == 1);
+char UART_readChar()
+{
+  while (uart_rxempty_read() == 1)
+    ;
   UART_popChar();
   return reg_uart_data;
 }
 
-int16_t UART_readInt(){
-  while(uart_rxempty_read() == 1);
+int16_t UART_readInt()
+{
+  while (uart_rxempty_read() == 1)
+    ;
   UART_popChar();
   return reg_uart_data;
 }
 
-void UART_sendChar(char character){
-  while(uart_txfull_read() == 1);
-    reg_uart_data = character;
+void UART_sendChar(char character)
+{
+  while (uart_txfull_read() == 1)
+    ;
+  reg_uart_data = character;
 }
 
-void UART_sendInt(int16_t n){
-  while(uart_txfull_read() == 1);
+void UART_sendInt(int16_t n)
+{
+  while (uart_txfull_read() == 1)
+    ;
   reg_uart_data = n;
   // UART_sendChar('\n');
 }
 
-
-chararray_t UART_readLine(char* received_array){
+chararray_t UART_readLine(char *received_array)
+{
   char received_char;
   int count = 0;
-  while ((received_char = UART_readChar()) != '\n'){
+  while ((received_char = UART_readChar()) != '\n')
+  {
     received_array[count++] = received_char;
   }
   // received_array[count++] = received_char;
@@ -90,8 +101,10 @@ chararray_t UART_readLine(char* received_array){
   return received;
 }
 
-void UART_sendLine(chararray_t chararray){
-  for(int i = 0; i < chararray.size; i++) {  // hard code 3 OK
+void UART_sendLine(chararray_t chararray)
+{
+  for (int i = 0; i < chararray.size; i++)
+  { // hard code 3 OK
     UART_sendChar(chararray.data[i]);
   }
 
@@ -99,38 +112,43 @@ void UART_sendLine(chararray_t chararray){
   UART_sendChar('\n');
 }
 
-void chararray_to_int(chararray_t array, uart_int* uart_num){
+void chararray_to_int(chararray_t array, uart_int *uart_num)
+{
 
   int16_t acc = 0;
-  
+
   bool neg = (array.data[0] == '-');
 
   // start at 1st index if negative else 0th
   int count = neg ? 1 : 0;
 
-  for (int i = count; i < array.size; i++){
+  for (int i = count; i < array.size; i++)
+  {
     // mult old values by 10 to get new vals
-    acc = mul(acc,10);
+    acc = mul(acc, 10);
     acc += array.data[i] - '0';
   }
 
-  if (neg) {
+  if (neg)
+  {
     acc = -acc;
   }
 
   // edit reference
   uart_num->num = acc;
   // has extra index
-  uart_num->size = array.size - 1; //HEREEEEEEEEEEEEEEEEEE
+  uart_num->size = array.size - 1; // HEREEEEEEEEEEEEEEEEEE
 }
 
-void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
+void int_to_chararray(uart_int *uart_num, chararray_t *ret, char *arr)
+{
   int num = uart_num->num; // Preserve original value
   bool neg = num < 0;
 
   // Handle sign
   int index = 0;
-  if (neg) {
+  if (neg)
+  {
     arr[index++] = '-';
     num = -num; // Work with absolute value for conversion
   }
@@ -138,13 +156,15 @@ void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
   // Extract digits into a temporary buffer (reverse order)
   int temp[10]; // Maximum 10 digits for a 32-bit integer
   int digit_count = 0;
-  do {
+  do
+  {
     temp[digit_count++] = rem(num, 10);
     num = div(num, 10);
   } while (num > 0);
 
   // Build the result string
-  for (int i = 0; i < digit_count; i++) {
+  for (int i = 0; i < digit_count; i++)
+  {
     arr[index++] = temp[digit_count - i - 1] + '0';
   }
 
@@ -152,7 +172,6 @@ void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
   ret->data = arr;
   ret->size = index;
 }
-
 
 // void send_ring_buffer(RingBuffer ring_buffer){
 //   int count = 0;
@@ -174,9 +193,47 @@ void int_to_chararray(uart_int* uart_num, chararray_t* ret, char* arr) {
 //   }
 // }
 
+bool test_basic_put_get(void)
+{
+  IntRingBuffer rb = create_int_ring(4);
+  int16_t val_in = 123;
+  int_ring_buffer_put(&rb, val_in);
+
+  int16_t val_out = int_ring_buffer_put(&rb);
+
+  if (val_out != 123)
+  {
+    return false;
+  }
+  return true;
+}
+
+bool test_overwrite_at_capacity(void)
+{
+  // capacity=3
+  IntRingBuffer rb = create_int_ring(3);
+
+  int_ring_buffer_put(&rb, 1);
+  int_ring_buffer_put(&rb, 2);
+  int_ring_buffer_put(&rb, 3);
+  // buffer is now full (3 items: 1,2,3)
+  int_ring_buffer_put(&rb, 4);
+  int_ring_buffer_put(&rb, 5);
+
+  int16_t r1 = int_ring_buffer_get(&rb);
+  int16_t r2 = int_ring_buffer_get(&rb);
+  int16_t r3 = int_ring_buffer_get(&rb);
+
+  bool pass = (r1 == 3 && r2 == 4 && r3 == 5);
+  return pass;
+}
 
 void main()
 {
+
+  print_test_result("Test 1 - Basic Put/Get", test_basic_put_get());
+  print_test_result("Test 2 - Overwrite at Capacity", test_overwrite_at_capacity());
+
   reg_gpio_mode1 = 1;
   reg_gpio_mode0 = 0;
   reg_gpio_ien = 1;
@@ -231,164 +288,154 @@ void main()
   reg_mprj_xfer = 1;
   while (reg_mprj_xfer == 1)
     ;
-  
+
   // Enable uart
   reg_uart_enable = 1;
   reg_mprj_datah = 0;
   reg_mprj_datal = 0;
   RingBuffer ring_buffer = create_ring(156);
-  
-  while(1)
+
+  while (1)
   {
-      // BASIC TEST:
-      // char test[6];
-      // UART_sendLine(UART_readLine(test));
+    // BASIC TEST:
+    // char test[6];
+    // UART_sendLine(UART_readLine(test));
 
-      //  Basic INT test
-      int16_t num = UART_readInt();
-      // CANNOT DO ADDITION FIND OUT WHY s
-      UART_sendInt(num);
+    //  Basic INT test
+    int16_t num = UART_readInt();
+    // CANNOT DO ADDITION FIND OUT WHY s
+    UART_sendInt(num);
 
-      // INT TO CHAR TEST:
-      // uart_int uart_num = {9254, 4};
-      // char mem[6];
-      // chararray_t arr;
-      // int_to_chararray(&uart_num, &arr, mem);
-      // UART_sendLine(arr);
+    // INT TO CHAR TEST:
+    // uart_int uart_num = {9254, 4};
+    // char mem[6];
+    // chararray_t arr;
+    // int_to_chararray(&uart_num, &arr, mem);
+    // UART_sendLine(arr);
 
-      // CHAR TO INT TEST:
-      // char memory[] = {'-','6','9','1'};
-      // chararray_t value = {memory, 4};
-      // uart_int uart_num;
-      // chararray_to_int(value, &uart_num);
-      // char mem2[uart_num.size];
-      // chararray_t arr;
-      // int_to_chararray(&uart_num,&arr, mem2);
-      // UART_sendLine(arr);
+    // CHAR TO INT TEST:
+    // char memory[] = {'-','6','9','1'};
+    // chararray_t value = {memory, 4};
+    // uart_int uart_num;
+    // chararray_to_int(value, &uart_num);
+    // char mem2[uart_num.size];
+    // chararray_t arr;
+    // int_to_chararray(&uart_num,&arr, mem2);
+    // UART_sendLine(arr);
 
-      // Ring Buffer Test:
-      // char memory[] = {'-','6','9','1'};
-      // chararray_t value = {memory, 4};
-      // uart_int uart_num;
+    // Ring Buffer Test:
+    // char memory[] = {'-','6','9','1'};
+    // chararray_t value = {memory, 4};
+    // uart_int uart_num;
 
-      // // num 2
-      // char memory2[] = {'1','0','9','1','5'};
-      // chararray_t value2 = {memory2, 5};
-      // uart_int uart_num2;
+    // // num 2
+    // char memory2[] = {'1','0','9','1','5'};
+    // chararray_t value2 = {memory2, 5};
+    // uart_int uart_num2;
 
-      // // Convert and put into buffer
-      // chararray_to_int(value, &uart_num);
-      // chararray_to_int(value2, &uart_num2);
-      // ring_buffer_put(&ring_buffer, uart_num);
-      // ring_buffer_put(&ring_buffer, uart_num2);
+    // // Convert and put into buffer
+    // chararray_to_int(value, &uart_num);
+    // chararray_to_int(value2, &uart_num2);
+    // ring_buffer_put(&ring_buffer, uart_num);
+    // ring_buffer_put(&ring_buffer, uart_num2);
 
-      // // Immediately take out:
-      // uart_num = ring_buffer_get(&ring_buffer);
-      // char mem[uart_num.size];
-      // chararray_t arr;
-      // int_to_chararray(&uart_num,&arr, mem);
-      // UART_sendLine(arr);
+    // // Immediately take out:
+    // uart_num = ring_buffer_get(&ring_buffer);
+    // char mem[uart_num.size];
+    // chararray_t arr;
+    // int_to_chararray(&uart_num,&arr, mem);
+    // UART_sendLine(arr);
 
-      // // Take out second num
-      // uart_num2 = ring_buffer_get(&ring_buffer);
-      // char mem2[uart_num2.size];
-      // chararray_t arr2;
-      // int_to_chararray(&uart_num2,&arr2, mem2);
-      // UART_sendLine(arr2);
+    // // Take out second num
+    // uart_num2 = ring_buffer_get(&ring_buffer);
+    // char mem2[uart_num2.size];
+    // chararray_t arr2;
+    // int_to_chararray(&uart_num2,&arr2, mem2);
+    // UART_sendLine(arr2);
 
-      // PROBLEMS HERE:
+    // PROBLEMS HERE:
 
-      // Get first number
-      // char arr[6];
-      // chararray_t char_arr = UART_readLine(arr);
+    // Get first number
+    // char arr[6];
+    // chararray_t char_arr = UART_readLine(arr);
 
-      // uart_int uart_num;
-      // chararray_to_int(char_arr, &uart_num);
-      // UART_sendChar('\n');
+    // uart_int uart_num;
+    // chararray_to_int(char_arr, &uart_num);
+    // UART_sendChar('\n');
 
-      // // Get second number
-      // chararray_t char_arr2 = UART_readLine(arr);
+    // // Get second number
+    // chararray_t char_arr2 = UART_readLine(arr);
 
-      // uart_int uart_num2;
-      // chararray_to_int(char_arr2, &uart_num2);
+    // uart_int uart_num2;
+    // chararray_to_int(char_arr2, &uart_num2);
 
-      // // Put both nums in RingBuffer
-      // ring_buffer_put(&ring_buffer, uart_num);
-      // ring_buffer_put(&ring_buffer, uart_num2);
+    // // Put both nums in RingBuffer
+    // ring_buffer_put(&ring_buffer, uart_num);
+    // ring_buffer_put(&ring_buffer, uart_num2);
 
-      // // Get first and second number
-      // uart_int returned_num = ring_buffer_get(&ring_buffer);
-      // uart_int returned_num2 = ring_buffer_get(&ring_buffer);
+    // // Get first and second number
+    // uart_int returned_num = ring_buffer_get(&ring_buffer);
+    // uart_int returned_num2 = ring_buffer_get(&ring_buffer);
 
-      // // Convert to char arrays
-      // char num_arr[returned_num.size];
-      // char num_arr2[returned_num2.size];
+    // // Convert to char arrays
+    // char num_arr[returned_num.size];
+    // char num_arr2[returned_num2.size];
 
-      // chararray_t returned_char;
-      // chararray_t returned_char2;
+    // chararray_t returned_char;
+    // chararray_t returned_char2;
 
-      // int_to_chararray(&returned_num, &returned_char, num_arr);
-      // int_to_chararray(&returned_num2, &returned_char2, num_arr2);
+    // int_to_chararray(&returned_num, &returned_char, num_arr);
+    // int_to_chararray(&returned_num2, &returned_char2, num_arr2);
 
-      // // UART_sendLine(returned_char);
-      // UART_sendLine(returned_char2);
+    // // UART_sendLine(returned_char);
+    // UART_sendLine(returned_char2);
 
+    // chararray_t char_arr = UART_readLine(arr);
 
+    // uart_int uart_num;
+    // chararray_to_int(char_arr, &uart_num);
 
+    // ring_buffer_put(&ring_buffer, uart_num);
 
+    // chararray_t char_arr2;
+    // arr[uart_num.size-1];
+    // ring_buffer_put(&ring_buffer, uart_num);
+    // int_to_chararray(&uart_num, &char_arr2, arr);
 
+    // UART_sendLine(char_arr2);
 
-      // chararray_t char_arr = UART_readLine(arr);
+    // chararray_t received = UART_readLine(arr); // Read input as a chararray
+    // uart_int num;
 
-      // uart_int uart_num;
-      // chararray_to_int(char_arr, &uart_num);
-      
-      // ring_buffer_put(&ring_buffer, uart_num);
+    // // Convert to uart_int
+    // uart_int uart_num;
+    // chararray_to_int(received, &uart_num);
 
-      // chararray_t char_arr2;
-      // arr[uart_num.size-1];
-      // ring_buffer_put(&ring_buffer, uart_num);
-      // int_to_chararray(&uart_num, &char_arr2, arr);
+    // // Allocate a sufficiently large buffer for the output
+    // char converted[6]; // Buffer size should accommodate potential sign and digits
+    // chararray_t result;
 
-      // UART_sendLine(char_arr2);
+    // // Allocate a sufficiently large buffer for the output
+    // char converted[6]; // Buffer size should accommodate potential sign and digits
+    // chararray_t result;
 
+    // // Convert back to chararray
+    // int_to_chararray(&uart_num, &result, converted);
 
+    // // Send the resulting chararray
+    // UART_sendLine(result);
 
-      // chararray_t received = UART_readLine(arr); // Read input as a chararray
-      // uart_int num;
+    // ring_buffer_put(&ring_buffer,uart_num);
 
-      // // Convert to uart_int
-      // uart_int uart_num;
-      // chararray_to_int(received, &uart_num);
+    // // get same num from ring buffer
+    // uart_int uart_num2 = ring_buffer_get(&ring_buffer);
+    // char size2[uart_num2.size];
 
+    // chararray_t buffer_recieved;
 
-      // // Allocate a sufficiently large buffer for the output
-      // char converted[6]; // Buffer size should accommodate potential sign and digits
-      // chararray_t result;
-      
-      // // Allocate a sufficiently large buffer for the output
-      // char converted[6]; // Buffer size should accommodate potential sign and digits
-      // chararray_t result;
-
-      // // Convert back to chararray
-      // int_to_chararray(&uart_num, &result, converted);
-
-      // // Send the resulting chararray
-      // UART_sendLine(result);
-
-
-      // ring_buffer_put(&ring_buffer,uart_num);
-
-      // // get same num from ring buffer
-      // uart_int uart_num2 = ring_buffer_get(&ring_buffer);
-      // char size2[uart_num2.size];
-
-      // chararray_t buffer_recieved;
-
-      // int_to_chararray(&uart_num2, &buffer_recieved, arr);
-      // if (uart_num.num == uart_num2.num & uart_num.size == uart_num2.size){
-      //   UART_sendLine(buffer_recieved);
-      // }
+    // int_to_chararray(&uart_num2, &buffer_recieved, arr);
+    // if (uart_num.num == uart_num2.num & uart_num.size == uart_num2.size){
+    //   UART_sendLine(buffer_recieved);
+    // }
   }
-
 }
