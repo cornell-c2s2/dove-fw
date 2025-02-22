@@ -25,6 +25,7 @@ set(APP_FILES
   riscv-apps/mem-test.c
   riscv-apps/filter-blink.c
   riscv-apps/performance.c
+  riscv-apps/wishbone.c
 )
 
 set(INCLUDE_DIRS
