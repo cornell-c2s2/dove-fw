@@ -34,39 +34,13 @@ void delay(const int d)
     }
 }
 
-void blink(int on)
-{
-    if (on)
-    {
-        reg_gpio_out = 0; // ON
-        reg_mprj_datah = 0x0000003f;
-        reg_mprj_datal = 0xffffffff;
-
-        delay(8000000);
-    }
-    else
-    {
-
-        reg_gpio_out = 1; // OFF
-        reg_mprj_datal = 0x00000000;
-        reg_mprj_datah = 0x00000000;
-
-        delay(8000000);
-    }
-}
-
 void wb_test_loopback_inXbar_clsXbar(){
     while (input_0_val != 1) {
         // wait
-        blink(1);
     }
     int input = input_0;
-    blink(0);
-    blink(1);
-    blink(0);
     while (output_1_rdy != 1) {
         //wait
-        blink(1);
     }
     output_1 = input;
 }
@@ -177,6 +151,9 @@ int main()
     reg_mprj_io_1 = GPIO_MODE_MGMT_STD_OUTPUT;
 
     // Initiate the serial transfer
+    reg_mprj_xfer = 1;
+    while (reg_mprj_xfer == 1);
+
     reg_wb_enable = 1;
 
     // Select one of the below functions to call when doing wb physical testing
