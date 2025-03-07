@@ -28,19 +28,10 @@ void ring_buffer_put(IntRingBuffer *buffer, int16_t value)
 
     buffer->ring_buffer[buffer->write] = value;
     buffer->write = (buffer->write + 1) % buffer->capacity;
-
-    // Serial.print("PUT: ");
-    // Serial.print(value);
-    // Serial.print(" | Write: ");
-    // Serial.print(buffer->write);
-    // Serial.print(" | Read: ");
-    // Serial.print(buffer->read);
-    // Serial.print(" | Size: ");
-    // Serial.println(buffer->size);
 }
 
 
-int16_t ring_buffer_get(IntRingBuffer *buffer)
+int16_t ring_buffer_peek(IntRingBuffer *buffer)
 {
     if (buffer->size == 0)
     {
@@ -49,18 +40,16 @@ int16_t ring_buffer_get(IntRingBuffer *buffer)
     }
 
     int16_t value = buffer->ring_buffer[buffer->read];
+    return value;
+}
+
+
+int16_t ring_buffer_get(IntRingBuffer *buffer)
+{
+    int16_t value = ring_buffer_peek(buffer);
+    
     buffer->read = (buffer->read + 1) % buffer->capacity;
     buffer->size--;
-
-    // Serial.print("GET: ");
-    // Serial.print(value);
-    // Serial.print(" | Write: ");
-    // Serial.print(buffer->write);
-    // Serial.print(" | Read: ");
-    // Serial.print(buffer->read);
-    // Serial.print(" | Size: ");
-    // Serial.println(buffer->size);
-
     return value;
 }
 

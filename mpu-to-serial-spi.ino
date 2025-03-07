@@ -20,6 +20,10 @@ MPU6050 accelgyro;
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
+//Ring Buffer:
+IntRingBuffer buffer = create_int_ring(30);
+
+
 int i = 0;
 
 void setup() {
@@ -63,7 +67,6 @@ void UART_sendInt(int16_t n){
     Serial1.println(high_byte);
     Serial1.println(low_byte);
 }
-
 
 void test_ringbuffer() {
     Serial.println("Test 1: Initialization");
@@ -117,44 +120,42 @@ void test_ringbuffer() {
     free_ring_buffer(&buffer); // Cleanup allocated memory
 }
 
-void loop() {
-    Serial.println("Starting Ring Buffer Tests...");
-    test_ringbuffer();
-    // accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    // Serial.print("a/g:\t");
 
-    // Serial.println(ax);
-    // int16_t num_ax = ax;
-    // UART_sendInt(num_ax);
-    // int16_t incomingByte = receiveInt16();
+//prints + dumps the buffer
+void dumpRingBuffer(IntRingBuffer *buffer) {
+    int size = buffer->size;
+    for (int i = 0; i < size; i ++) {
+        Serial.print(ring_buffer_get(buffer));
+        Serial.print(" ");
+    }
+    Serial.println();
+}
+
+void loop() {
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    // Serial.print("a/g:\t");
     
-    // Serial.println(incomingByte);
-    
+    Serial.print("ax:\t");
+    Serial.println(ax);
+    int16_t num_ax = ax;
     
     // Serial.print("ay:\t");
     // Serial.println(ay);
-    // Serial1.println(ay);
+    // Serial.print("az:\t");
+    // Serial.println(az);
+    Serial.println();
 
-    // int incomingByte2 = Serial1.read();
+
+    Serial.print("Added: ");
+    for (int16_t i = 0; i < 50; i ++) {
+        ring_buffer_put(&buffer, i);
+        Serial.print(i);
+        Serial.print(" ");
+    }
+    Serial.println();
     
-    // Serial.println(incomingByte2);
-
-    // if (i % 51 == 50) {
-    //     Serial1.println("DMP");
-    // }
-    // i++;
-
-    // Serial.print("Received from RISCV: ");
-    // char incomingByte = Serial1.read();
-
-    // while (incomingByte != '\n') {
-    //     if ((incomingByte >= 48 and incomingByte <= 57) or incomingByte == 45) {
-    //         Serial.print(incomingByte);
-    //     }
-        
-    //     incomingByte = Serial1.read();
-    // }
-    // Serial.println();  
-
+    Serial.println("____________DUMPING RING BUFFER________________________________");
+    dumpRingBuffer(&buffer);
+    
 
 }

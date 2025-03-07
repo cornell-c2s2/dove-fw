@@ -17,6 +17,8 @@ IntRingBuffer create_int_ring(uint8_t capacity);
 
 void ring_buffer_put(IntRingBuffer *buffer, int16_t value);
 
+int16_t ring_buffer_peek(IntRingBuffer *buffer);
+
 int16_t ring_buffer_get(IntRingBuffer *buffer);
 
 void free_ring_buffer(IntRingBuffer *buffer);
