@@ -1,9 +1,14 @@
 // This #include statement was automatically added by the Particle IDE.
+#include "Thread.h"
+#include "ThreadController.h"
+
+// This #include statement was automatically added by the Particle IDE.
 #include "ringbuffer.h"
 
 // Include Particle Device OS APIs
 #include "Particle.h"
 #include "MPU6050.h"
+
 
 
 // Let Device OS manage the connection to the Particle Cloud
@@ -21,10 +26,33 @@ int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
 //Ring Buffer:
-IntRingBuffer buffer = create_int_ring(30);
+IntRingBuffer buffer = create_int_ring(50);
+
+
+
+//My simple Thread
+MyThread thread1 = MyThread();
+MyThread thread2 = MyThread();
 
 
 int i = 0;
+// callback for myThread
+void callback1(){
+	i ++;
+	Serial.print("T1: running on ");
+	Serial.print(millis());
+	Serial.print("\t incrementing i \t");
+	Serial.println(i);
+}
+
+void callback2(){
+    i = i * 2;
+	Serial.print("T2: running on ");
+	Serial.print(millis());
+	Serial.print("\t doubling i \t\t");
+	Serial.println(i);
+}
+
 
 void setup() {
     int baud_rate = 9600;
@@ -43,6 +71,70 @@ void setup() {
     // Cerify the connection:
     Serial.println("Testing device connections...");
     // Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed")
+    
+	thread1.onRun(callback1);
+	thread1.setInterval(2000);
+	
+	thread2.onRun(callback2);
+	thread2.setInterval(5000);
+}
+
+
+
+void loop() {
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    // Serial.print("a/g:\t");
+    
+    // test_ringbuffer();
+    
+    // Serial.print("ax:\t");
+    // Serial.println(ax);
+    
+    // Put IMU data in ring buffer
+    int16_t num_ax = ax;
+    // ring_buffer_put(&buffer, ax);
+    
+    
+    // int random_time = random(50,100);
+    
+    // for (int i = 0; i < random_time; i++){
+    //     delay(500);
+    // }
+    
+
+	if(thread1.shouldRun()) {
+	    Serial.println();
+	    thread1.run();
+	    Serial.println();
+	}
+	
+	if(thread2.shouldRun()) {
+	    Serial.println();
+	    thread2.run();
+	    Serial.println();
+	}
+
+
+    // Serial.print("ay:\t");
+    // Serial.println(ay);
+    // Serial.print("az:\t");
+    // Serial.println(az);
+    // Serial.println();
+
+
+    // Serial.print("Added: ");
+    // for (int16_t i = 0; i < 50; i ++) {
+    //     ring_buffer_put(&buffer, i);
+    //     Serial.print(i);
+    //     Serial.print(" ");
+    // }
+    
+    // Serial.println();
+    
+    // Serial.println("____________DUMPING RING BUFFER________________________________");
+    // dumpRingBuffer(&buffer);
+    
+
 }
 
 int16_t receiveInt16() {
@@ -118,6 +210,8 @@ void test_ringbuffer() {
 
     Serial.println("Tests Completed.");
     free_ring_buffer(&buffer); // Cleanup allocated memory
+    
+    delay(10);
 }
 
 
@@ -129,33 +223,4 @@ void dumpRingBuffer(IntRingBuffer *buffer) {
         Serial.print(" ");
     }
     Serial.println();
-}
-
-void loop() {
-    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    // Serial.print("a/g:\t");
-    
-    Serial.print("ax:\t");
-    Serial.println(ax);
-    int16_t num_ax = ax;
-    
-    // Serial.print("ay:\t");
-    // Serial.println(ay);
-    // Serial.print("az:\t");
-    // Serial.println(az);
-    Serial.println();
-
-
-    Serial.print("Added: ");
-    for (int16_t i = 0; i < 50; i ++) {
-        ring_buffer_put(&buffer, i);
-        Serial.print(i);
-        Serial.print(" ");
-    }
-    Serial.println();
-    
-    Serial.println("____________DUMPING RING BUFFER________________________________");
-    dumpRingBuffer(&buffer);
-    
-
 }
